@@ -21,15 +21,9 @@ export const loadServer = async (useTestingModule: boolean = false) => {
             imports: [AppModule],
         }).compile();
 
-        server =
-            testModule.createNestApplication<NestFastifyApplication>(
-                fastifyAdapter,
-            );
+        server = testModule.createNestApplication(fastifyAdapter);
     } else {
-        server = await NestFactory.create<NestFastifyApplication>(
-            AppModule,
-            fastifyAdapter,
-        );
+        server = await NestFactory.create(AppModule, fastifyAdapter);
     }
 
     server.useGlobalPipes(new ValidationPipe(validationConfig));

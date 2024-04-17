@@ -1,4 +1,4 @@
-import { ClassConstructor, plainToClass } from 'class-transformer';
+import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { validationConfig } from 'src/config/validation';
 import { ValidationHttpError } from 'src/dto/httpResponses';
@@ -9,7 +9,7 @@ expect.extend({
         received: object,
         expectedSchema: ClassConstructor<any>,
     ) => {
-        const classObj = plainToClass(expectedSchema, received);
+        const classObj = plainToInstance(expectedSchema, received);
         const errors = validateSync(classObj, validationConfig);
 
         if (errors.length > 0) {

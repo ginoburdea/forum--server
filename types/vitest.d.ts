@@ -1,3 +1,5 @@
+import type { Assertion, AsymmetricMatchersContaining } from 'vitest';
+
 interface CustomMatchers<R = unknown> {
     toMatchSchema: (expectedSchema: ClassConstructor<any>) => R;
     toHaveValidationErrors: (onFields: string[]) => R;

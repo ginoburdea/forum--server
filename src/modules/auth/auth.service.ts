@@ -71,4 +71,14 @@ export class AuthService {
             .save();
         return { token, expiresAt };
     }
+
+    async tokenToUser(token: string): Promise<User | null> {
+        const session = await this.sessionRepo.findOne({
+            where: { token },
+            select: { id: true },
+            relations: { user: true },
+        });
+
+        return session?.user || null;
+    }
 }
