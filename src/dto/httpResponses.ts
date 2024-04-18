@@ -13,7 +13,7 @@ export class GenericHttpError {
 }
 
 export class UnauthorizedHttpError {
-    @IsNumber() @IsIn([401]) statusCode: number;
+    @IsNumber() @IsIn([401, 403]) statusCode: number;
     @IsString() @IsIn(['Unauthorized']) error: string;
     @IsString() message: string;
 }

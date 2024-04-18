@@ -66,4 +66,79 @@ describe('Questions module v1 (e2e)', () => {
             expect(res.statusCode).toEqual(401);
         });
     });
+
+    describe('Close a question (PUT /v1/questions/:questionId/close)', () => {
+        const method = 'PUT';
+        const url = '/v1/questions/:questionId/close';
+
+        it('Should close a question', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+            const question = await testUtilsService.genQuestion(user);
+            const _url = url.replace(':questionId', question.id);
+
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+
+            expect(res.body).toEqual('');
+            expect(res.statusCode).toEqual(204);
+        });
+
+        it('Should return unauthorized error when the user is not logged in', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = { authorization: '' };
+            const question = await testUtilsService.genQuestion(user);
+            const _url = url.replace(':questionId', question.id);
+
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
+        });
+
+        it("Should return forbidden error when the user tries to close someone else's question", async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+
+            const someoneElse = await testUtilsService.genUser();
+            const someoneElsesQuestion =
+                await testUtilsService.genQuestion(someoneElse);
+            const _url = url.replace(':questionId', someoneElsesQuestion.id);
+
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(403);
+        });
+
+        it('Should return bad request error when the question does not exist', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+            const notExistentQuestionId = faker.string.uuid();
+            const _url = url.replace(':questionId', notExistentQuestionId);
+
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toHaveValidationErrors(['questionId']);
+            expect(res.statusCode).toEqual(400);
+        });
+    });
 });
