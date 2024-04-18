@@ -6,7 +6,6 @@ import {
     Post,
     Put,
     Req,
-    SetMetadata,
     UseGuards,
 } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
@@ -14,7 +13,6 @@ import { AuthGuard, ReqWithUser } from '../auth/auth.guard';
 import { PostQuestionBody } from './dto/postQuestion.dto';
 import { HasQuestion } from './question.decorator';
 import { CloseQuestionParams } from './dto/closeQuestion.dto';
-import { QuestionGuard } from './question.guard';
 
 @Controller({ path: 'questions', version: '1' })
 export class QuestionsController {

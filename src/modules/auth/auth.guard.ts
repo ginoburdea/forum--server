@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { plainToInstance } from 'class-transformer';
-import { validate, validateSync } from 'class-validator';
+import { validate } from 'class-validator';
 import { AuthGuardHeaders } from './dto/guard';
 import { FastifyRequest } from 'fastify';
 import { validationConfig } from 'src/config/validation';

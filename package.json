@@ -12,7 +12,7 @@
         "start:dev": "dotenv -- nest start --watch",
         "start:debug": "dotenv -- nest start --debug --watch",
         "start:prod": "node dist/main",
-        "lint": "eslint **/*.{js,ts} --fix",
+        "lint": "eslint **/!(*.d).{js,ts} --fix",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:cov": "vitest run --coverage",

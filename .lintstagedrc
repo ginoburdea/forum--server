@@ -1,4 +1,4 @@
 {
     "*": "prettier --fix --ignore-unknown",
-    "*(!.d).{js,ts}": "eslint --fix"
+    "**/!(*.d).{js,ts}": "eslint --fix"
 }

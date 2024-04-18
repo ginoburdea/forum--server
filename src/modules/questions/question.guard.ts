@@ -7,7 +7,6 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Observable } from 'rxjs';
 import { QuestionsService } from './questions.service';
 import { ReqWithUser } from '../auth/auth.guard';
 

@@ -1,9 +1,5 @@
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CloseQuestionParams {
     @IsString() @IsNotEmpty() questionId: string;
 }
-
-// export class CloseQuestionRes {
-//     @IsString() @IsUUID() questionId: string;
-// }
