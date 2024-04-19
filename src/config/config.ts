@@ -18,6 +18,8 @@ export const configConfig: ConfigModuleOptions = {
         DB_NAME: Joi.string(),
         GOOGLE_CLIENT_ID: Joi.string(),
         GOOGLE_SECRET: Joi.string(),
+        PAGE_SIZE: Joi.number().integer().positive(),
+        QUESTION_PREVIEW_LENGTH: Joi.number().integer().positive(),
     }),
     validationOptions: {
         allowUnknown: true,

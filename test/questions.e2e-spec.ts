@@ -8,10 +8,42 @@ import {
     PostQuestionBody,
     PostQuestionRes,
 } from 'src/modules/questions/dto/postQuestion.dto';
+import {
+    GetQuestionsRes,
+    QuestionsSortOptions,
+} from 'src/modules/questions/dto/getQuestions.dto';
+import { ConfigService } from '@nestjs/config';
+import { isDateString } from 'class-validator';
+import clone from 'lodash.clone';
+import isObject from 'lodash.isobject';
+
+/**
+ * Recursively checks all the strings in the object input and turns them into Date objects if they are date strings (ISO8601).
+ * @param input
+ * @returns
+ */
+const parseDates = (input: any) => {
+    if (Array.isArray(input)) {
+        return input.map((inp) => parseDates(inp));
+    }
+
+    if (isObject(input)) {
+        const copy = clone(input);
+        for (const key in copy) copy[key] = parseDates(copy[key]);
+        return copy;
+    }
+
+    if (typeof input === 'string' && isDateString(input)) {
+        return new Date(input);
+    }
+
+    return input;
+};
 
 describe('Questions module v1 (e2e)', () => {
     let server: NestFastifyApplication;
     let testUtilsService: TestUtilsService;
+    let configService: ConfigService;
 
     beforeAll(async () => {
         server = await loadServer(true);
@@ -19,6 +51,7 @@ describe('Questions module v1 (e2e)', () => {
         await server.getHttpAdapter().getInstance().ready();
 
         testUtilsService = server.get<TestUtilsService>(TestUtilsService);
+        configService = server.get<ConfigService>(ConfigService);
     });
 
     afterEach(async () => {
@@ -139,6 +172,111 @@ describe('Questions module v1 (e2e)', () => {
 
             expect(body).toHaveValidationErrors(['questionId']);
             expect(res.statusCode).toEqual(400);
+        });
+    });
+
+    describe('List questions (GET /v1/questions)', () => {
+        const method = 'GET';
+        const url = '/v1/questions';
+
+        it('Should list questions on the first page', async () => {
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize + 1);
+
+            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({ method, url, query });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+        });
+
+        it('Should list questions on the second page', async () => {
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize + 1);
+
+            const query = { page: '1', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({ method, url, query });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(1);
+        });
+
+        it('Should list questions when sorted by newest', async () => {
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize);
+
+            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({ method, url, query });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(parseDates(body.questions)).toBeSorted({
+                byKey: 'postedAt',
+                order: 'desc',
+            });
+        });
+
+        it('Should list questions when sorted by oldest', async () => {
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize);
+
+            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({ method, url, query });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(parseDates(body.questions)).toBeSorted({
+                byKey: 'postedAt',
+                order: 'asc',
+            });
+        });
+
+        it('Should list questions when sorted by most answered', async () => {
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize);
+
+            const query = {
+                page: '0',
+                sort: QuestionsSortOptions.MOST_ANSWERED,
+            };
+            const res = await server.inject({ method, url, query });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(body.questions).toBeSorted({
+                byKey: 'answers',
+                order: 'desc',
+            });
+        });
+
+        it('Should list questions when sorted by least answered', async () => {
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize);
+
+            const query = {
+                page: '0',
+                sort: QuestionsSortOptions.LEAST_ANSWERED,
+            };
+            const res = await server.inject({ method, url, query });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(body.questions).toBeSorted({
+                byKey: 'answers',
+                order: 'asc',
+            });
         });
     });
 });

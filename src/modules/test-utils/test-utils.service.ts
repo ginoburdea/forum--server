@@ -62,15 +62,52 @@ export class TestUtilsService {
             .save();
     }
 
-    async genAnswer(user: User, overrides: Partial<Answer> = {}) {
+    async genQuestionsWithAnswers(
+        count: number = faker.number.int({ min: 2, max: 5 }),
+        user?: User,
+    ) {
+        const _user = user || (await this.genUser());
+
+        const questions: Question[] = [];
+        for (let i = 0; i < count; i++) {
+            const question = await this.genQuestion(_user);
+            await this.genAnswers(_user, question);
+
+            questions.push(question);
+        }
+
+        return questions;
+    }
+
+    async genAnswer(
+        user: User,
+        question?: Question,
+        overrides: Partial<Answer> = {},
+    ) {
         return this.answersRepo
             .create({
                 text: faker.lorem.sentence(),
                 replyingTo: null,
                 user,
-                question: await this.genQuestion(user),
+                question: question || (await this.genQuestion(user)),
                 ...overrides,
             })
             .save();
+    }
+
+    async genAnswers(
+        user: User,
+        question: Question,
+        count: number = faker.number.int({ min: 2, max: 5 }),
+    ) {
+        const _user = user || (await this.genUser());
+
+        const answers: Answer[] = [];
+        for (let i = 0; i < count; i++) {
+            const answer = await this.genAnswer(_user, question);
+            answers.push(answer);
+        }
+
+        return answers;
     }
 }

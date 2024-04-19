@@ -2,6 +2,7 @@ import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { validationConfig } from 'src/config/validation';
 import { ValidationHttpError } from 'src/dto/httpResponses';
+import { expectTypeOf } from 'vitest';
 import { expect } from 'vitest';
 
 expect.extend({
@@ -48,6 +49,39 @@ expect.extend({
                     `expected to find errors on keys ${JSON.stringify(notFoundKeys)} but they were not found on the given object: ${JSON.stringify(
                         (received as ValidationHttpError).message,
                     )}`,
+                pass: false,
+            };
+        }
+
+        return {
+            pass: true,
+            message: () => '',
+        };
+    },
+});
+
+expect.extend({
+    toBeSorted: (
+        received: object[],
+        filter: { byKey: string; order: 'asc' | 'des' },
+    ) => {
+        expectTypeOf(filter.byKey).toBeString();
+        expect(['asc', 'desc']).includes(filter.order);
+
+        expectTypeOf(received).toBeArray();
+        for (const item of received) {
+            expectTypeOf(item).toBeObject();
+        }
+
+        const receivedCopy = received.map((received) => received[filter.byKey]);
+        const expected = receivedCopy.sort();
+
+        try {
+            expect(receivedCopy).toStrictEqual(expected);
+        } catch (err) {
+            return {
+                message: () =>
+                    `expected array to be sorted ${filter.order} by key ${filter.byKey}`,
                 pass: false,
             };
         }
