@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, vi, beforeEach } from 'vitest';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { loadServer } from 'src/utils/loadServer';
 import { faker } from '@faker-js/faker';
@@ -54,7 +54,7 @@ describe('Questions module v1 (e2e)', () => {
         configService = server.get<ConfigService>(ConfigService);
     });
 
-    afterEach(async () => {
+    beforeEach(async () => {
         await testUtilsService.truncateTables();
         vi.restoreAllMocks();
     });
@@ -277,6 +277,189 @@ describe('Questions module v1 (e2e)', () => {
                 byKey: 'answers',
                 order: 'asc',
             });
+        });
+    });
+
+    describe('List own questions (GET /v1/questions/own)', () => {
+        const method = 'GET';
+        const url = '/v1/questions/own';
+
+        it('Should list own questions on the first page', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize + 1, user);
+
+            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+                headers: authHeaders,
+            });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+
+            for (const question of body.questions) {
+                expect(question).toMatchObject({
+                    authorName: user.name,
+                    authorPhoto: user.profilePhotoUrl,
+                });
+            }
+        });
+
+        it('Should list own questions on the second page', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize + 1, user);
+
+            const query = { page: '1', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+                headers: authHeaders,
+            });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(1);
+        });
+
+        it('Should list own questions when sorted by newest', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize, user);
+
+            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+                headers: authHeaders,
+            });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(parseDates(body.questions)).toBeSorted({
+                byKey: 'postedAt',
+                order: 'desc',
+            });
+        });
+
+        it('Should list own questions when sorted by oldest', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize, user);
+
+            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+                headers: authHeaders,
+            });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(parseDates(body.questions)).toBeSorted({
+                byKey: 'postedAt',
+                order: 'asc',
+            });
+        });
+
+        it('Should list own questions when sorted by most answered', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize, user);
+
+            const query = {
+                page: '0',
+                sort: QuestionsSortOptions.MOST_ANSWERED,
+            };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+                headers: authHeaders,
+            });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(body.questions).toBeSorted({
+                byKey: 'answers',
+                order: 'desc',
+            });
+        });
+
+        it('Should list own questions when sorted by least answered', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize, user);
+
+            const query = {
+                page: '0',
+                sort: QuestionsSortOptions.LEAST_ANSWERED,
+            };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+                headers: authHeaders,
+            });
+            const body: GetQuestionsRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionsRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.questions).toHaveLength(pageSize);
+            expect(body.questions).toBeSorted({
+                byKey: 'answers',
+                order: 'asc',
+            });
+        });
+
+        it('Should not list own questions when user is not logged in', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = { authorization: '' };
+
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genQuestionsWithAnswers(pageSize, user);
+
+            const query = {
+                page: '0',
+                sort: QuestionsSortOptions.NEWEST,
+            };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+                headers: authHeaders,
+            });
+            const body: UnauthorizedHttpError = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
         });
     });
 });

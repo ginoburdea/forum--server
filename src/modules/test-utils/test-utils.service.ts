@@ -66,7 +66,7 @@ export class TestUtilsService {
         count: number = faker.number.int({ min: 2, max: 5 }),
         user?: User,
     ) {
-        const _user = user || (await this.genUser());
+        const _user = user ?? (await this.genUser());
 
         const questions: Question[] = [];
         for (let i = 0; i < count; i++) {
@@ -89,7 +89,7 @@ export class TestUtilsService {
                 text: faker.lorem.sentence(),
                 replyingTo: null,
                 user,
-                question: question || (await this.genQuestion(user)),
+                question: question ?? (await this.genQuestion(user)),
                 ...overrides,
             })
             .save();
@@ -100,7 +100,7 @@ export class TestUtilsService {
         question: Question,
         count: number = faker.number.int({ min: 2, max: 5 }),
     ) {
-        const _user = user || (await this.genUser());
+        const _user = user ?? (await this.genUser());
 
         const answers: Answer[] = [];
         for (let i = 0; i < count; i++) {

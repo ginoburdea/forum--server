@@ -55,6 +55,7 @@ export class QuestionsService {
         page: number,
         sortByField: string,
         sortAscOrDesc: 'ASC' | 'DESC',
+        userId?: string,
     ): Promise<PreviewQuestion[]> {
         const pageSize = this.config.get<number>('PAGE_SIZE');
         const previewLength = this.config.get<number>(
@@ -81,6 +82,9 @@ export class QuestionsService {
             .addSelect('user.name', 'authorName')
             .addSelect('user.profile_photo_url', 'authorPhoto')
             .leftJoin('user', 'user', 'question.user_id = user.id')
+            .where(userId ? 'question.user_id = :userId' : 'TRUE', {
+                userId,
+            })
             .orderBy(sortByField, sortAscOrDesc)
             .limit(pageSize)
             .offset(page * pageSize)

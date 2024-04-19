@@ -56,4 +56,23 @@ export class QuestionsController {
 
         return { questions };
     }
+
+    @Get('own')
+    @UseGuards(AuthGuard)
+    async getOwnQuestions(
+        @Query() query: GetQuestionsQuery,
+        @Req() req: ReqWithUser,
+    ) {
+        const [sortByField, sortAscOrDesc] =
+            this.questionsService.convertSortOption(query.sort);
+
+        const questions = await this.questionsService.getQuestions(
+            query.page,
+            sortByField,
+            sortAscOrDesc,
+            req.user.id,
+        );
+
+        return { questions };
+    }
 }
