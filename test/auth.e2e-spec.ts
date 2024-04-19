@@ -5,6 +5,7 @@ import { AuthService } from 'src/modules/auth/auth.service';
 import { faker } from '@faker-js/faker';
 import { GoogleAuthBody, GoogleAuthRes } from 'src/modules/auth/dto/googleAuth';
 import { TestUtilsService } from 'src/modules/test-utils/test-utils.service';
+import { UnauthorizedHttpError } from 'src/dto/httpResponses';
 
 const mockedIdTokenToUserData = async () => ({
     name: faker.person.fullName(),
@@ -86,26 +87,26 @@ describe('Auth module v1 (e2e)', () => {
             },
         );
 
-        // it('Should return a unauthorized error when the Google id token is invalid', async () => {
-        //     const inputBody: GoogleAuthBody = {
-        //         idToken: faker.string.nanoid(16),
-        //     };
+        it('Should return a unauthorized error when the Google id token is invalid', async () => {
+            const inputBody: GoogleAuthBody = {
+                idToken: faker.string.nanoid(16),
+            };
 
-        //     const res = await server.inject({ method, url, body: inputBody });
-        //     const body = res.json();
+            const res = await server.inject({ method, url, body: inputBody });
+            const body = res.json();
 
-        //     expect(body).toMatchSchema(UnauthorizedHttpError);
-        //     expect(res.statusCode).toEqual(401);
-        // });
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
+        });
 
-        // it('Should return a validation error when the body data is invalid', async () => {
-        //     const inputBody = {};
+        it('Should return a validation error when the body data is invalid', async () => {
+            const inputBody = {};
 
-        //     const res = await server.inject({ method, url, body: inputBody });
-        //     const body = res.json();
+            const res = await server.inject({ method, url, body: inputBody });
+            const body = res.json();
 
-        //     expect(body).toHaveValidationErrors(['idToken']);
-        //     expect(res.statusCode).toEqual(422);
-        // });
+            expect(body).toHaveValidationErrors(['idToken']);
+            expect(res.statusCode).toEqual(422);
+        });
     });
 });

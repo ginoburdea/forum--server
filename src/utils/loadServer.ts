@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { AppModule } from 'src/app.module';
 import { validationConfig } from 'src/config/validation';
+import { TestUtilsModule } from 'src/modules/test-utils/test-utils.module';
 
 const fastifyAdapter = new FastifyAdapter({
     genReqId: () => randomUUID(),
@@ -18,7 +19,7 @@ export const loadServer = async (useTestingModule: boolean = false) => {
 
     if (useTestingModule) {
         const testModule = await Test.createTestingModule({
-            imports: [AppModule],
+            imports: [AppModule, TestUtilsModule],
         }).compile();
 
         server = testModule.createNestApplication(fastifyAdapter);

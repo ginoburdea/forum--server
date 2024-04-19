@@ -4,12 +4,12 @@ import { QuestionsService } from './questions.service';
 import { AuthModule } from '../auth/auth.module';
 import { Question } from './question.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { QuestionGuard } from './question.guard';
+import { HelpersModule } from '../helpers/helpers.module';
 
 @Module({
-    imports: [AuthModule, TypeOrmModule.forFeature([Question])],
+    imports: [AuthModule, HelpersModule, TypeOrmModule.forFeature([Question])],
     controllers: [QuestionsController],
-    providers: [QuestionsService, QuestionGuard],
-    exports: [QuestionGuard],
+    providers: [QuestionsService],
+    exports: [QuestionsService],
 })
 export class QuestionsModule {}

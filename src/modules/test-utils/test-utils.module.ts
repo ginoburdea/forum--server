@@ -5,9 +5,13 @@ import { User } from '../auth/user.entity';
 import { AuthService } from '../auth/auth.service';
 import { AuthModule } from '../auth/auth.module';
 import { Question } from '../questions/question.entity';
+import { Answer } from '../answers/answer.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([User, Session, Question]), AuthModule],
+    imports: [
+        TypeOrmModule.forFeature([User, Session, Question, Answer]),
+        AuthModule,
+    ],
     providers: [TestUtilsService, AuthService],
 })
 export class TestUtilsModule {}

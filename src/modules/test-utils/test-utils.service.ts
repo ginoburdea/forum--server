@@ -5,6 +5,7 @@ import { faker } from '@faker-js/faker';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from '../auth/auth.service';
 import { Question } from '../questions/question.entity';
+import { Answer } from '../answers/answer.entity';
 
 @Injectable()
 export class TestUtilsService {
@@ -14,6 +15,8 @@ export class TestUtilsService {
         private readonly userRepo: Repository<User>,
         @InjectRepository(Question)
         private readonly questionRepo: Repository<Question>,
+        @InjectRepository(Answer)
+        private readonly answersRepo: Repository<Answer>,
         private readonly authService: AuthService,
     ) {}
 
@@ -54,6 +57,18 @@ export class TestUtilsService {
                 text: faker.lorem.sentence(),
                 closedAt: faker.date.recent(),
                 user,
+                ...overrides,
+            })
+            .save();
+    }
+
+    async genAnswer(user: User, overrides: Partial<Answer> = {}) {
+        return this.answersRepo
+            .create({
+                text: faker.lorem.sentence(),
+                replyingTo: null,
+                user,
+                question: await this.genQuestion(user),
                 ...overrides,
             })
             .save();

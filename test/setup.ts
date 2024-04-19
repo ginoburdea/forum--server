@@ -22,6 +22,7 @@ expect.extend({
 
         return {
             pass: true,
+            message: () => '',
         };
     },
 });
@@ -53,6 +54,7 @@ expect.extend({
 
         return {
             pass: true,
+            message: () => '',
         };
     },
 });

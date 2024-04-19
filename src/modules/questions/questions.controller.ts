@@ -11,8 +11,9 @@ import {
 import { QuestionsService } from './questions.service';
 import { AuthGuard, ReqWithUser } from '../auth/auth.guard';
 import { PostQuestionBody } from './dto/postQuestion.dto';
-import { HasQuestion } from './question.decorator';
 import { CloseQuestionParams } from './dto/closeQuestion.dto';
+import { Question } from './question.entity';
+import { Has } from '../helpers/has.decorator';
 
 @Controller({ path: 'questions', version: '1' })
 export class QuestionsController {
@@ -34,7 +35,7 @@ export class QuestionsController {
 
     @Put(':questionId/close')
     @HttpCode(204)
-    @HasQuestion('params.questionId')
+    @Has([[Question, 'params.questionId', 'question', true, false]])
     async closeQuestion(@Param() params: CloseQuestionParams) {
         await this.questionsService.closeQuestion(params.questionId);
     }
