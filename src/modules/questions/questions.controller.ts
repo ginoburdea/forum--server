@@ -16,7 +16,7 @@ import { PostQuestionBody, PostQuestionRes } from './dto/postQuestion.dto';
 import { CloseQuestionParams } from './dto/closeQuestion.dto';
 import { Question } from './question.entity';
 import { Has } from '../helpers/has.decorator';
-import { GetQuestionsQuery } from './dto/getQuestions.dto';
+import { GetQuestionsQuery, GetQuestionsRes } from './dto/getQuestions.dto';
 import {
     ApiBadRequestResponse,
     ApiBearerAuth,
@@ -71,6 +71,7 @@ export class QuestionsController {
 
     @Put(':questionId/close')
     @HttpCode(204)
+    @Has([[Question, 'params.questionId', 'question', true, false]])
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Close a question',
@@ -94,11 +95,23 @@ export class QuestionsController {
         description: 'Some data is invalid',
         type: UnprocessableEntityHttpError,
     })
-    @Has([[Question, 'params.questionId', 'question', true, false]])
     async closeQuestion(@Param() params: CloseQuestionParams) {
         await this.questionsService.closeQuestion(params.questionId);
     }
+
     @Get()
+    @ApiOperation({
+        summary: 'List questions',
+        description: 'Listing questions posted by anybody',
+    })
+    @ApiOkResponse({
+        description: 'Listed questions successfully',
+        type: GetQuestionsRes,
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
     async getQuestions(@Query() query: GetQuestionsQuery) {
         const [sortByField, sortAscOrDesc] =
             this.questionsService.convertSortOption(query.sort);
