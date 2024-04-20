@@ -6,6 +6,7 @@ import { Answer } from './answer.entity';
 import { QuestionsModule } from '../questions/questions.module';
 import { AuthModule } from '../auth/auth.module';
 import { HelpersModule } from '../helpers/helpers.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
     imports: [
@@ -13,6 +14,7 @@ import { HelpersModule } from '../helpers/helpers.module';
         QuestionsModule,
         HelpersModule,
         TypeOrmModule.forFeature([Answer]),
+        BullModule.registerQueue({ name: 'notifications' }),
     ],
     controllers: [AnswersController],
     providers: [AnswersService],

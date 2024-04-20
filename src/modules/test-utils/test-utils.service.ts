@@ -136,4 +136,10 @@ export class TestUtilsService {
 
         return input;
     };
+
+    async emptyInbox() {
+        await fetch('http://localhost:8025/api/v1/messages', {
+            method: 'DELETE',
+        });
+    }
 }

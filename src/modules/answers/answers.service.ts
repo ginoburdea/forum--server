@@ -4,6 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AnswersSortOptions, ListedAnswer } from './dto/getAnswers.dto';
 import { ConfigService } from '@nestjs/config';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { NewAnswerJobData } from '../notifications/notifications.consumer';
 
 @Injectable()
 export class AnswersService {
@@ -11,6 +14,8 @@ export class AnswersService {
         @InjectRepository(Answer)
         private readonly answersRepo: Repository<Answer>,
         private readonly config: ConfigService,
+        @InjectQueue('notifications')
+        private notificationsQueue: Queue,
     ) {}
 
     async postAnswer(
@@ -27,6 +32,11 @@ export class AnswersService {
                 replyingTo: { id: parentAnswerId },
             })
             .save();
+
+        await this.notificationsQueue.add('newAnswer', {
+            questionId,
+            answerId: answer.id,
+        } as NewAnswerJobData);
 
         return {
             answerId: answer.id,
