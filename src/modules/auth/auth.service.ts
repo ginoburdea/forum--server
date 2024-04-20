@@ -81,4 +81,27 @@ export class AuthService {
 
         return session?.user || null;
     }
+
+    async getProfile(userId: string) {
+        const user = await this.userRepo.findOne({
+            select: {
+                name: true,
+                email: true,
+                profilePhotoUrl: true,
+                // answersNotifications: true,
+                // repliesNotifications: true,
+            },
+            where: { id: userId },
+        });
+
+        return {
+            name: user.name,
+            email: user.email,
+            photo: user.profilePhotoUrl,
+            answersNotifications: false,
+            repliesNotifications: false,
+            // answersNotifications: user.answersNotifications,
+            // repliesNotifications: user.repliesNotifications,
+        };
+    }
 }

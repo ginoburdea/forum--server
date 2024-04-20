@@ -1,9 +1,12 @@
 import {
     Body,
     Controller,
+    Get,
     HttpCode,
     Post,
+    Req,
     UnauthorizedException,
+    UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleAuthBody, GoogleAuthRes } from './dto/googleAuth.dto';
@@ -18,9 +21,11 @@ import {
     UnauthorizedHttpError,
     UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
+import { AuthGuard, ReqWithUser } from './auth.guard';
+import { GetProfileRes } from './dto/getProfile.dto';
 
 @Controller({ path: 'auth', version: '1' })
-@ApiTags('Authentication')
+@ApiTags('Authentication and profile information')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
@@ -59,5 +64,37 @@ export class AuthController {
             user.id,
         );
         return { token, expiresAt };
+    }
+
+    @Get('profile')
+    @UseGuards(AuthGuard)
+    @ApiOperation({
+        summary: 'Get profile info',
+        description: 'Gets the profile information of the logged in user',
+    })
+    @ApiOkResponse({
+        description: 'Got the profile information successfully',
+        type: GetProfileRes,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
+    async getProfile(@Req() req: ReqWithUser) {
+        const {
+            name,
+            email,
+            photo,
+            // answersNotifications,
+            // repliesNotifications,
+        } = await this.authService.getProfile(req.user.id);
+
+        return {
+            name,
+            email,
+            photo,
+            // answersNotifications,
+            // repliesNotifications,
+        };
     }
 }

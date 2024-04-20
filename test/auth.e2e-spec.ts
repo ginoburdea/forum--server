@@ -9,6 +9,7 @@ import {
 import { TestUtilsService } from 'src/modules/test-utils/test-utils.service';
 import { UnauthorizedHttpError } from 'src/dto/httpResponses.dto';
 import { OAuth2Client } from 'google-auth-library';
+import { GetProfileRes } from 'src/modules/auth/dto/getProfile.dto';
 
 const mockGoogleAuth = () => {
     vi.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(
@@ -97,6 +98,39 @@ describe('Auth module v1 (e2e)', () => {
 
             expect(body).toHaveValidationErrors(['idToken']);
             expect(res.statusCode).toEqual(422);
+        });
+    });
+
+    describe('Get profile info about himself (POST /v1/auth/profile)', () => {
+        const method = 'GET';
+        const url = '/v1/auth/profile';
+
+        it('Should get the profile info', async () => {
+            const authHeaders = await testUtilsService.genAuthHeaders();
+
+            const res = await server.inject({
+                method,
+                url,
+                headers: authHeaders,
+            });
+            const body: GetProfileRes = res.json();
+
+            expect(body).toMatchSchema(GetProfileRes);
+            expect(res.statusCode).toEqual(200);
+        });
+
+        it('Should return unauthorized error when the user is not logged in', async () => {
+            const authHeaders = { authorization: '' };
+
+            const res = await server.inject({
+                method,
+                url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
         });
     });
 });
