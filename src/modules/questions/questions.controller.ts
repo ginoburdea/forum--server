@@ -127,6 +127,23 @@ export class QuestionsController {
 
     @Get('own')
     @UseGuards(AuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'List own questions',
+        description: 'Listing questions posted by the logged in user',
+    })
+    @ApiOkResponse({
+        description: 'Listed own questions successfully',
+        type: GetQuestionsRes,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
     async getOwnQuestions(
         @Query() query: GetQuestionsQuery,
         @Req() req: ReqWithUser,
