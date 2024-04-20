@@ -3,8 +3,9 @@ import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { loadServer } from 'src/utils/loadServer';
 import { faker } from '@faker-js/faker';
 import {
+    BadRequestHttpError,
     UnauthorizedHttpError,
-    ValidationHttpError,
+    UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
 import { TestUtilsService } from 'src/modules/test-utils/test-utils.service';
 import {
@@ -36,7 +37,9 @@ describe('Answers module v1 (e2e)', () => {
         it('Should post an answer', async () => {
             const user = await testUtilsService.genUser();
             const authHeaders = await testUtilsService.genAuthHeaders(user);
-            const question = await testUtilsService.genQuestion(user);
+            const question = await testUtilsService.genQuestion(user, {
+                closedAt: null,
+            });
             const _url = url.replace(':questionId', question.id);
             const inputBody: PostAnswerBody = {
                 text: faker.lorem.sentence(),
@@ -58,7 +61,9 @@ describe('Answers module v1 (e2e)', () => {
         it('Should post an answer replying to another answer', async () => {
             const user = await testUtilsService.genUser();
             const authHeaders = await testUtilsService.genAuthHeaders(user);
-            const question = await testUtilsService.genQuestion(user);
+            const question = await testUtilsService.genQuestion(user, {
+                closedAt: null,
+            });
             const answer = await testUtilsService.genAnswer(user);
 
             const _url = url.replace(':questionId', question.id);
@@ -78,6 +83,29 @@ describe('Answers module v1 (e2e)', () => {
             expect(body).toMatchSchema(PostAnswerRes);
             expect(body.replyingToId).toBeTypeOf('string');
             expect(res.statusCode).toEqual(200);
+        });
+
+        it('Should return a bad request error when trying answer a closed question', async () => {
+            const user = await testUtilsService.genUser();
+            const authHeaders = await testUtilsService.genAuthHeaders(user);
+            const question = await testUtilsService.genQuestion(user, {
+                closedAt: faker.date.past(),
+            });
+            const _url = url.replace(':questionId', question.id);
+            const inputBody: PostAnswerBody = {
+                text: faker.lorem.sentence(),
+            };
+
+            const res = await server.inject({
+                method,
+                url: _url,
+                body: inputBody,
+                headers: authHeaders,
+            });
+            const body: BadRequestHttpError = res.json();
+
+            expect(body).toHaveValidationErrors(['questionId']);
+            expect(res.statusCode).toEqual(400);
         });
 
         it('Should return unauthorized error when the user is not logged in', async () => {
@@ -114,7 +142,7 @@ describe('Answers module v1 (e2e)', () => {
                 body: inputBody,
                 headers: authHeaders,
             });
-            const body: ValidationHttpError = res.json();
+            const body: UnprocessableEntityHttpError = res.json();
 
             expect(body).toHaveValidationErrors(['text']);
             expect(res.statusCode).toEqual(422);
