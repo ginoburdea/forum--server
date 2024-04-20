@@ -19,7 +19,14 @@ export class NotificationsService {
     ) {
         this.templates = {
             newAnswer: {
-                answerUrl: compile(configService.get<string>('LINKS_ANSWER')),
+                answerUrl: compile(
+                    configService.get<string>('LINKS__NEW_ANSWER__ANSWER_URL'),
+                ),
+            },
+            newReply: {
+                answerUrl: compile(
+                    configService.get<string>('LINKS__NEW_REPLY__ANSWER_URL'),
+                ),
             },
         };
     }
@@ -64,6 +71,38 @@ export class NotificationsService {
                 answerAuthorName: answer.user.name,
                 answerUrl,
                 questionPreviewText,
+            },
+        });
+    }
+
+    async sendNewReplyEmail(replyingToAnswerId: string, answerId: string) {
+        const answer = await this.answersService.findAnswer(
+            replyingToAnswerId,
+            ['user', 'question'],
+        );
+        if (!answer.user.repliesNotifications) return;
+
+        const reply = await this.answersService.findAnswer(answerId);
+        if (answer.user.id === reply.user.id) return;
+
+        const answerUrl = this.templates.newReply.answerUrl({
+            answerId,
+            questionId: answer.question.id,
+            repliedToAnswerId: replyingToAnswerId,
+        });
+        const answerPreviewText = this.shortenText(
+            answer.question.text,
+            this.configService.get<number>('OWN_ANSWER_PREVIEW_LENGTH'),
+        );
+
+        await this.mailerService.sendMail({
+            to: answer.user.email,
+            subject: 'Someone replied to your answer!',
+            template: 'newReply',
+            context: {
+                answerAuthorName: answer.user.name,
+                answerUrl,
+                answerPreviewText,
             },
         });
     }

@@ -6,7 +6,10 @@ import { AnswersSortOptions, ListedAnswer } from './dto/getAnswers.dto';
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { NewAnswerJobData } from '../notifications/notifications.consumer';
+import {
+    NewAnswerJobData,
+    NewReplyJobData,
+} from '../notifications/notifications.consumer';
 
 @Injectable()
 export class AnswersService {
@@ -37,6 +40,12 @@ export class AnswersService {
             questionId,
             answerId: answer.id,
         } as NewAnswerJobData);
+        if (parentAnswerId) {
+            await this.notificationsQueue.add('newReply', {
+                replyingToAnswerId: parentAnswerId,
+                answerId: answer.id,
+            } as NewReplyJobData);
+        }
 
         return {
             answerId: answer.id,
@@ -44,12 +53,12 @@ export class AnswersService {
         };
     }
 
-    async findAnswer(answerId?: string) {
+    async findAnswer(answerId?: string, relations: string[] = ['user']) {
         if (!answerId) return null;
 
         return await this.answersRepo.findOne({
             where: { id: answerId },
-            relations: { user: true },
+            relations: relations,
         });
     }
 

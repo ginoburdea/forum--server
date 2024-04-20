@@ -41,7 +41,7 @@ describe('Answers module v1 (e2e)', () => {
         const method = 'POST';
         const url = '/v1/questions/:questionId/answers';
 
-        it('Should post an answer', async () => {
+        it('Should post an answer and notify', async () => {
             const user = await testUtilsService.genUser();
             const authHeaders = await testUtilsService.genAuthHeaders(user);
             const question = await testUtilsService.genQuestion(user, {
@@ -65,7 +65,7 @@ describe('Answers module v1 (e2e)', () => {
             expect(res.statusCode).toEqual(200);
         });
 
-        it('Should post an answer replying to another answer', async () => {
+        it('Should post an answer replying to another answer and send the required notifications', async () => {
             const user = await testUtilsService.genUser();
             const authHeaders = await testUtilsService.genAuthHeaders(user);
             const question = await testUtilsService.genQuestion(user, {

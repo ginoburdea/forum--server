@@ -7,6 +7,11 @@ export interface NewAnswerJobData {
     answerId: string;
 }
 
+export interface NewReplyJobData {
+    replyingToAnswerId: string;
+    answerId: string;
+}
+
 @Processor('notifications')
 export class NotificationsConsumer {
     constructor(private readonly notificationsService: NotificationsService) {}
@@ -16,6 +21,14 @@ export class NotificationsConsumer {
         await this.notificationsService.sendNewAnswerEmail(
             job.data.answerId,
             job.data.questionId,
+        );
+    }
+
+    @Process('newReply')
+    async processNewReply(job: Job<NewReplyJobData>) {
+        await this.notificationsService.sendNewReplyEmail(
+            job.data.replyingToAnswerId,
+            job.data.answerId,
         );
     }
 }

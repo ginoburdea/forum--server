@@ -97,4 +97,88 @@ describe('Notifications Service (integration)', () => {
             expect(emailsBody.total).toEqual(0);
         });
     });
+
+    describe('#sendNewReplyEmail()', () => {
+        it('Should send an email to the author when someone replies to his answer', async () => {
+            const questionAuthor = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(questionAuthor);
+
+            const answerAuthor = await testUtilsService.genUser();
+            const answer = await testUtilsService.genAnswer(
+                answerAuthor,
+                question,
+            );
+
+            const replyAuthor = await testUtilsService.genUser();
+            const reply = await testUtilsService.genAnswer(
+                replyAuthor,
+                question,
+                { replyingTo: answer },
+            );
+
+            await notificationsService.sendNewReplyEmail(answer.id, reply.id);
+
+            const emailsRes = await fetch(
+                `http://localhost:8025/api/v1/messages`,
+            );
+            const emailsBody = await emailsRes.json();
+            expect(emailsBody.total).toEqual(1);
+            expect(emailsBody.messages[0].To[0].Address).toEqual(
+                answerAuthor.email,
+            );
+        });
+
+        it('Should not send an email when the author replies to his own answer', async () => {
+            const questionAuthor = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(questionAuthor);
+
+            const answerAuthor = questionAuthor;
+            const answer = await testUtilsService.genAnswer(
+                answerAuthor,
+                question,
+            );
+
+            const reply = await testUtilsService.genAnswer(
+                answerAuthor,
+                question,
+                { replyingTo: answer },
+            );
+
+            await notificationsService.sendNewReplyEmail(answer.id, reply.id);
+
+            const emailsRes = await fetch(
+                `http://localhost:8025/api/v1/messages`,
+            );
+            const emailsBody = await emailsRes.json();
+            expect(emailsBody.total).toEqual(0);
+        });
+
+        it('Should not send an email when the author is not subscribed to replies emails', async () => {
+            const questionAuthor = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(questionAuthor);
+
+            const answerAuthor = await testUtilsService.genUser({
+                repliesNotifications: false,
+            });
+            const answer = await testUtilsService.genAnswer(
+                answerAuthor,
+                question,
+            );
+
+            const replyAuthor = await testUtilsService.genUser();
+            const reply = await testUtilsService.genAnswer(
+                replyAuthor,
+                question,
+                { replyingTo: answer },
+            );
+
+            await notificationsService.sendNewReplyEmail(answer.id, reply.id);
+
+            const emailsRes = await fetch(
+                `http://localhost:8025/api/v1/messages`,
+            );
+            const emailsBody = await emailsRes.json();
+            expect(emailsBody.total).toEqual(0);
+        });
+    });
 });
