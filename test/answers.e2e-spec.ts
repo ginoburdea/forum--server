@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, vi, beforeEach } from 'vitest';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { loadServer } from 'src/utils/loadServer';
 import { faker } from '@faker-js/faker';
@@ -24,7 +24,7 @@ describe('Answers module v1 (e2e)', () => {
         testUtilsService = server.get<TestUtilsService>(TestUtilsService);
     });
 
-    afterEach(async () => {
+    beforeEach(async () => {
         await testUtilsService.truncateTables();
         vi.restoreAllMocks();
     });

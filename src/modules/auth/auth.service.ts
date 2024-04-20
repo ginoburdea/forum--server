@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { OAuth2Client } from 'google-auth-library';
+import { LoginTicket, OAuth2Client } from 'google-auth-library';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -37,7 +37,7 @@ export class AuthService {
         });
 
         try {
-            const ticket = await oAuthClient.verifyIdToken({
+            const ticket: LoginTicket = await oAuthClient.verifyIdToken({
                 idToken,
                 audience: this.config.get('GOOGLE_CLIENT_ID'),
             });
