@@ -8,13 +8,28 @@ import {
     Req,
 } from '@nestjs/common';
 import { AnswersService } from './answers.service';
-import { PostAnswerBody } from './dto/postAnswer.dto';
+import { PostAnswerBody, PostAnswerRes } from './dto/postAnswer.dto';
 import { Has } from '../helpers/has.decorator';
 import { Question } from '../questions/question.entity';
 import { Answer } from './answer.entity';
 import { ReqWithData } from '../helpers/has.guard';
+import {
+    ApiBearerAuth,
+    ApiOperation,
+    ApiUnauthorizedResponse,
+    ApiBadRequestResponse,
+    ApiUnprocessableEntityResponse,
+    ApiTags,
+    ApiOkResponse,
+} from '@nestjs/swagger';
+import {
+    UnauthorizedHttpError,
+    BadRequestHttpError,
+    UnprocessableEntityHttpError,
+} from 'src/dto/httpResponses.dto';
 
 @Controller({ path: 'questions/:questionId/answers', version: '1' })
+@ApiTags('Answers')
 export class AnswersController {
     constructor(private readonly answersService: AnswersService) {}
 
@@ -24,6 +39,28 @@ export class AnswersController {
         [Question, 'params.questionId', 'question', false, false],
         [Answer, 'body.replyingTo', null, false, true],
     ])
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Post an answer',
+        description: 'Posting an answer to a question',
+    })
+    @ApiOkResponse({
+        description: 'Answer posted successfully',
+        type: PostAnswerRes,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'The question / answer id is invalid or the question / answer does not exist',
+        type: BadRequestHttpError,
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
     async postAnswer(@Req() req: ReqWithData, @Body() body: PostAnswerBody) {
         // @ts-expect-error: req.data.question is a generic BaseEntity and doesn't have typings for every property
         if (req.data.question.closedAt) {

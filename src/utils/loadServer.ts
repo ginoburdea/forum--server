@@ -37,8 +37,11 @@ export const loadServer = async (useTestingModule: boolean = false) => {
         const swaggerConfig = new DocumentBuilder()
             .setTitle('Forum API')
             .setDescription('The documentation of the Forum API')
+            .addServer(
+                `http://${config.get('APP_HOST')}:${config.get('APP_PORT')}`,
+                'Development server',
+            )
             .addBearerAuth()
-            // .addExtension('')
             .build();
 
         const swaggerDocument = SwaggerModule.createDocument(

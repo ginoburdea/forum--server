@@ -20,6 +20,7 @@ import { GetQuestionsQuery, GetQuestionsRes } from './dto/getQuestions.dto';
 import {
     ApiBadRequestResponse,
     ApiBearerAuth,
+    ApiForbiddenResponse,
     ApiNoContentResponse,
     ApiOkResponse,
     ApiOperation,
@@ -29,6 +30,7 @@ import {
 } from '@nestjs/swagger';
 import {
     BadRequestHttpError,
+    ForbiddenHttpError,
     UnauthorizedHttpError,
     UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
@@ -85,6 +87,10 @@ export class QuestionsController {
     @ApiUnauthorizedResponse({
         description: 'The user is not logged in',
         type: UnauthorizedHttpError,
+    })
+    @ApiForbiddenResponse({
+        description: 'The user tries to close a question he did not post',
+        type: ForbiddenHttpError,
     })
     @ApiBadRequestResponse({
         description:
