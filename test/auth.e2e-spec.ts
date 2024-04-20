@@ -2,9 +2,12 @@ import { describe, it, expect, beforeAll, vi, beforeEach } from 'vitest';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { loadServer } from 'src/utils/loadServer';
 import { faker } from '@faker-js/faker';
-import { GoogleAuthBody, GoogleAuthRes } from 'src/modules/auth/dto/googleAuth';
+import {
+    GoogleAuthBody,
+    GoogleAuthRes,
+} from 'src/modules/auth/dto/googleAuth.dto';
 import { TestUtilsService } from 'src/modules/test-utils/test-utils.service';
-import { UnauthorizedHttpError } from 'src/dto/httpResponses';
+import { UnauthorizedHttpError } from 'src/dto/httpResponses.dto';
 import { OAuth2Client } from 'google-auth-library';
 
 const mockGoogleAuth = () => {

@@ -5,7 +5,7 @@ import { faker } from '@faker-js/faker';
 import {
     UnauthorizedHttpError,
     ValidationHttpError,
-} from 'src/dto/httpResponses';
+} from 'src/dto/httpResponses.dto';
 import { TestUtilsService } from 'src/modules/test-utils/test-utils.service';
 import {
     PostAnswerBody,

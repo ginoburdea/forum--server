@@ -1,7 +1,7 @@
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { validationConfig } from 'src/config/validation';
-import { ValidationHttpError } from 'src/dto/httpResponses';
+import { ValidationHttpError } from 'src/dto/httpResponses.dto';
 import { expectTypeOf } from 'vitest';
 import { expect } from 'vitest';
 

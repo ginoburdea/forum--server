@@ -2,7 +2,10 @@ import { describe, it, expect, beforeAll, vi, beforeEach } from 'vitest';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { loadServer } from 'src/utils/loadServer';
 import { faker } from '@faker-js/faker';
-import { UnauthorizedHttpError } from 'src/dto/httpResponses';
+import {
+    ForbiddenHttpError,
+    UnauthorizedHttpError,
+} from 'src/dto/httpResponses.dto';
 import { TestUtilsService } from 'src/modules/test-utils/test-utils.service';
 import {
     PostQuestionBody,
@@ -153,7 +156,7 @@ describe('Questions module v1 (e2e)', () => {
             });
             const body = res.json();
 
-            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(body).toMatchSchema(ForbiddenHttpError);
             expect(res.statusCode).toEqual(403);
         });
 
