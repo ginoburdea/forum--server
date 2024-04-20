@@ -12,19 +12,41 @@ import {
 } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 import { AuthGuard, ReqWithUser } from '../auth/auth.guard';
-import { PostQuestionBody } from './dto/postQuestion.dto';
+import { PostQuestionBody, PostQuestionRes } from './dto/postQuestion.dto';
 import { CloseQuestionParams } from './dto/closeQuestion.dto';
 import { Question } from './question.entity';
 import { Has } from '../helpers/has.decorator';
 import { GetQuestionsQuery } from './dto/getQuestions.dto';
+import {
+    ApiBearerAuth,
+    ApiOkResponse,
+    ApiOperation,
+    ApiTags,
+    ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { UnauthorizedHttpError } from 'src/dto/httpResponses.dto';
 
 @Controller({ path: 'questions', version: '1' })
+@ApiTags('Questions')
 export class QuestionsController {
     constructor(private readonly questionsService: QuestionsService) {}
 
     @Post()
     @HttpCode(200)
     @UseGuards(AuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Post a question',
+        description: 'Posting a question on the forum',
+    })
+    @ApiOkResponse({
+        description: 'Question was posted successfully',
+        type: PostQuestionRes,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
     async postQuestion(
         @Req() req: ReqWithUser,
         @Body() body: PostQuestionBody,

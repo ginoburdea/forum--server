@@ -38,6 +38,7 @@ export const loadServer = async (useTestingModule: boolean = false) => {
             .setTitle('Forum API')
             .setDescription('The documentation of the Forum API')
             .addBearerAuth()
+            // .addExtension('')
             .build();
 
         const swaggerDocument = SwaggerModule.createDocument(
