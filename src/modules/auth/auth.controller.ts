@@ -85,16 +85,16 @@ export class AuthController {
             name,
             email,
             photo,
-            // answersNotifications,
-            // repliesNotifications,
+            answersNotifications,
+            repliesNotifications,
         } = await this.authService.getProfile(req.user.id);
 
         return {
             name,
             email,
             photo,
-            // answersNotifications,
-            // repliesNotifications,
+            answersNotifications,
+            repliesNotifications,
         };
     }
 }

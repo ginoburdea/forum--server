@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import {
+    IsBoolean,
+    IsEmail,
+    IsNotEmpty,
+    IsString,
+    IsUrl,
+} from 'class-validator';
 
 export class GetProfileRes {
     /**
@@ -22,13 +28,13 @@ export class GetProfileRes {
      */
     @IsString() @IsUrl({ require_host: false }) photo: string;
 
-    // /**
-    //  * Whether the user wants to receive email notifications when someone answers their question
-    //  */
-    // @IsBoolean() answersNotifications: boolean;
+    /**
+     * Whether the user wants to receive email notifications when someone answers their question
+     */
+    @IsBoolean() answersNotifications: boolean;
 
-    // /**
-    //  * Whether the user wants to receive email notifications when someone replies to one of his answers
-    //  */
-    // @IsBoolean() repliesNotifications: boolean;
+    /**
+     * Whether the user wants to receive email notifications when someone replies to one of his answers
+     */
+    @IsBoolean() repliesNotifications: boolean;
 }

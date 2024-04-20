@@ -88,8 +88,8 @@ export class AuthService {
                 name: true,
                 email: true,
                 profilePhotoUrl: true,
-                // answersNotifications: true,
-                // repliesNotifications: true,
+                answersNotifications: true,
+                repliesNotifications: true,
             },
             where: { id: userId },
         });
@@ -98,10 +98,8 @@ export class AuthService {
             name: user.name,
             email: user.email,
             photo: user.profilePhotoUrl,
-            answersNotifications: false,
-            repliesNotifications: false,
-            // answersNotifications: user.answersNotifications,
-            // repliesNotifications: user.repliesNotifications,
+            answersNotifications: user.answersNotifications,
+            repliesNotifications: user.repliesNotifications,
         };
     }
 }

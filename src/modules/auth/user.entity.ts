@@ -9,6 +9,8 @@ export class User extends BaseEntity {
     @Column() name: string;
     @Column({ unique: true }) email: string;
     @Column() profilePhotoUrl: string;
+    @Column({ default: true }) answersNotifications: boolean;
+    @Column({ default: true }) repliesNotifications: boolean;
 
     @OneToMany(() => Session, (session) => session.user, {
         onDelete: 'CASCADE',
