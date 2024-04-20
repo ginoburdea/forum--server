@@ -1,7 +1,10 @@
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { validationConfig } from 'src/config/validation';
-import { ValidationHttpError } from 'src/dto/httpResponses.dto';
+import {
+    BadRequestHttpError,
+    UnprocessableEntityHttpError,
+} from 'src/dto/httpResponses.dto';
 import { expectTypeOf } from 'vitest';
 import { expect } from 'vitest';
 
@@ -29,14 +32,33 @@ expect.extend({
 });
 
 expect.extend({
-    toHaveValidationErrors: (received: object, onFields: string[] = []) => {
-        expect(received).toMatchSchema(ValidationHttpError);
+    toHaveValidationErrors: (
+        received: { [key: string]: any },
+        onFields: string[] = [],
+    ) => {
+        try {
+            expect(received.statusCode).toEqual(400);
+        } catch (error) {
+            try {
+                expect(received.statusCode).toEqual(422);
+            } catch (error) {
+                return {
+                    pass: false,
+                    message: () =>
+                        `expected ${JSON.stringify(received)}.statusCode to equal 400 or 422`,
+                };
+            }
+        }
+
+        const Error =
+            received.statusCode === 400
+                ? BadRequestHttpError
+                : UnprocessableEntityHttpError;
+        expect(received).toMatchSchema(Error);
 
         const notFoundKeys = [];
 
-        const receivedKeys = Object.keys(
-            (received as ValidationHttpError).message,
-        );
+        const receivedKeys = Object.keys((received as Error).message);
         for (const key of onFields) {
             if (!receivedKeys.includes(key)) {
                 notFoundKeys.push(key);
@@ -47,7 +69,7 @@ expect.extend({
             return {
                 message: () =>
                     `expected to find errors on keys ${JSON.stringify(notFoundKeys)} but they were not found on the given object: ${JSON.stringify(
-                        (received as ValidationHttpError).message,
+                        (received as Error).message,
                     )}`,
                 pass: false,
             };

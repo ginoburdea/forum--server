@@ -18,13 +18,20 @@ import { Question } from './question.entity';
 import { Has } from '../helpers/has.decorator';
 import { GetQuestionsQuery } from './dto/getQuestions.dto';
 import {
+    ApiBadRequestResponse,
     ApiBearerAuth,
+    ApiNoContentResponse,
     ApiOkResponse,
     ApiOperation,
     ApiTags,
     ApiUnauthorizedResponse,
+    ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { UnauthorizedHttpError } from 'src/dto/httpResponses.dto';
+import {
+    BadRequestHttpError,
+    UnauthorizedHttpError,
+    UnprocessableEntityHttpError,
+} from 'src/dto/httpResponses.dto';
 
 @Controller({ path: 'questions', version: '1' })
 @ApiTags('Questions')
@@ -47,6 +54,10 @@ export class QuestionsController {
         description: 'The user is not logged in',
         type: UnauthorizedHttpError,
     })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
     async postQuestion(
         @Req() req: ReqWithUser,
         @Body() body: PostQuestionBody,
@@ -60,11 +71,33 @@ export class QuestionsController {
 
     @Put(':questionId/close')
     @HttpCode(204)
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Close a question',
+        description:
+            'Marking the question as closed and no longer accepting answers',
+    })
+    @ApiNoContentResponse({
+        description: 'Question closed successfully',
+        type: PostQuestionRes,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'The question id is invalid or the question does not exist',
+        type: BadRequestHttpError,
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
     @Has([[Question, 'params.questionId', 'question', true, false]])
     async closeQuestion(@Param() params: CloseQuestionParams) {
         await this.questionsService.closeQuestion(params.questionId);
     }
-
     @Get()
     async getQuestions(@Query() query: GetQuestionsQuery) {
         const [sortByField, sortAscOrDesc] =

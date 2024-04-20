@@ -1,17 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-    IsIn,
-    IsNumber,
-    IsObject,
-    IsOptional,
-    IsString,
-} from 'class-validator';
-
-export class GenericHttpError {
-    @IsNumber() statusCode: number;
-    @IsString() error: string;
-    @IsString() @IsOptional() message?: string;
-}
+import { IsIn, IsNumber, IsObject, IsString } from 'class-validator';
 
 export class Unauthorized {
     /**
@@ -50,8 +38,49 @@ export class ForbiddenHttpError extends Unauthorized {
     statusCode: number;
 }
 
-export class ValidationHttpError {
-    @IsNumber() @IsIn([400, 422]) statusCode: number;
-    @IsString() @IsIn(['Validation error']) error: string;
-    @IsObject() message: { [key: string]: string };
+type ValidationError = {
+    [key: string]: string;
+};
+
+export class Validation {
+    /**
+     * The error title - what happened?
+     */
+    @ApiProperty({ enum: ['Validation error'] })
+    @IsString()
+    @IsIn(['Validation error'])
+    error: string;
+
+    /**
+     * The error description - what fields have errors and why did the error happen?
+     */
+    @ApiProperty({
+        type: 'object',
+        example: {
+            name: 'name must be at least 4 characters long',
+            question: 'question is required',
+        },
+    })
+    @IsObject()
+    message: ValidationError;
+}
+
+export class BadRequestHttpError extends Validation {
+    /**
+     * The status code of the error
+     */
+    @ApiProperty({ enum: [400] })
+    @IsNumber()
+    @IsIn([400])
+    statusCode: number;
+}
+
+export class UnprocessableEntityHttpError extends Validation {
+    /**
+     * The status code of the error
+     */
+    @ApiProperty({ enum: [422] })
+    @IsNumber()
+    @IsIn([422])
+    statusCode: number;
 }

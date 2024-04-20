@@ -12,8 +12,12 @@ import {
     ApiOperation,
     ApiTags,
     ApiUnauthorizedResponse,
+    ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
-import { UnauthorizedHttpError } from 'src/dto/httpResponses.dto';
+import {
+    UnauthorizedHttpError,
+    UnprocessableEntityHttpError,
+} from 'src/dto/httpResponses.dto';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('Authentication')
@@ -34,6 +38,10 @@ export class AuthController {
     @ApiUnauthorizedResponse({
         description: 'The Google id token is invalid',
         type: UnauthorizedHttpError,
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
     })
     async loginWithGoogle(@Body() body: GoogleAuthBody) {
         const userData = await this.authService.idTokenToUserData(body.idToken);
