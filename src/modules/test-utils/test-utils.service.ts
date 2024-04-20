@@ -6,6 +6,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from '../auth/auth.service';
 import { Question } from '../questions/question.entity';
 import { Answer } from '../answers/answer.entity';
+import { isDateString } from 'class-validator';
+import clone from 'lodash.clone';
+import isObject from 'lodash.isobject';
 
 @Injectable()
 export class TestUtilsService {
@@ -110,4 +113,27 @@ export class TestUtilsService {
 
         return answers;
     }
+
+    /**
+     * Recursively checks all the strings in the object input and turns them into Date objects if they are date strings (ISO8601).
+     * @param input
+     * @returns
+     */
+    parseDates = (input: any) => {
+        if (Array.isArray(input)) {
+            return input.map((inp) => this.parseDates(inp));
+        }
+
+        if (isObject(input)) {
+            const copy = clone(input);
+            for (const key in copy) copy[key] = this.parseDates(copy[key]);
+            return copy;
+        }
+
+        if (typeof input === 'string' && isDateString(input)) {
+            return new Date(input);
+        }
+
+        return input;
+    };
 }

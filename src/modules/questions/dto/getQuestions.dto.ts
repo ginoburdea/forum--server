@@ -13,6 +13,7 @@ import {
     Min,
     ValidateNested,
 } from 'class-validator';
+import { PaginationQuery } from 'src/dto/pagination.dto';
 
 export enum QuestionsSortOptions {
     NEWEST = 'newest',
@@ -21,12 +22,14 @@ export enum QuestionsSortOptions {
     LEAST_ANSWERED = 'leastAnswered',
 }
 
-export class GetQuestionsQuery {
-    @IsInt({ message: 'page must be an integer' }) @Min(0) page: number;
+export class GetQuestionsQuery extends PaginationQuery {
+    /**
+     * The sort option
+     */
     @IsEnum(QuestionsSortOptions) sort: QuestionsSortOptions;
 }
 
-export class PreviewQuestion {
+export class ListedQuestion {
     /**
      * The question id
      */
@@ -61,7 +64,7 @@ export class PreviewQuestion {
 
     /**
      * The name of the question's author
-     * @example "John Doe"
+     * @example 'John Doe'
      */
     @IsString() authorName: string;
 
@@ -78,6 +81,6 @@ export class GetQuestionsRes {
      */
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => PreviewQuestion)
-    questions: PreviewQuestion[];
+    @Type(() => ListedQuestion)
+    questions: ListedQuestion[];
 }

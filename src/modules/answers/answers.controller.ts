@@ -2,9 +2,11 @@ import {
     BadRequestException,
     Body,
     Controller,
+    Get,
     HttpCode,
     HttpStatus,
     Post,
+    Query,
     Req,
 } from '@nestjs/common';
 import { AnswersService } from './answers.service';
@@ -27,6 +29,7 @@ import {
     BadRequestHttpError,
     UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
+import { GetAnswersQuery, GetAnswersRes } from './dto/getAnswers.dto';
 
 @Controller({ path: 'questions/:questionId/answers', version: '1' })
 @ApiTags('Answers')
@@ -81,5 +84,36 @@ export class AnswersController {
             body.replyingTo,
         );
         return { answerId, replyingToId };
+    }
+
+    @Get()
+    @ApiOperation({
+        summary: 'List answers',
+        description: 'Listing answers for the specified question',
+    })
+    @ApiOkResponse({
+        description: 'Listed answers successfully',
+        type: GetAnswersRes,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'The question id is invalid or the question does not exist',
+        type: BadRequestHttpError,
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
+    async getAnswers(@Query() query: GetAnswersQuery) {
+        const [sortByField, sortAscOrDesc] =
+            this.answersService.convertSortOption(query.sort);
+
+        const answers = await this.answersService.getAnswers(
+            query.page,
+            sortByField as 'createdAt',
+            sortAscOrDesc,
+        );
+
+        return { answers };
     }
 }

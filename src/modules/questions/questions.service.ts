@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { Question } from './question.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PreviewQuestion, QuestionsSortOptions } from './dto/getQuestions.dto';
+import { ListedQuestion, QuestionsSortOptions } from './dto/getQuestions.dto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -56,7 +56,7 @@ export class QuestionsService {
         sortByField: string,
         sortAscOrDesc: 'ASC' | 'DESC',
         userId?: string,
-    ): Promise<PreviewQuestion[]> {
+    ): Promise<ListedQuestion[]> {
         const pageSize = this.config.get<number>('PAGE_SIZE');
         const previewLength = this.config.get<number>(
             'QUESTION_PREVIEW_LENGTH',

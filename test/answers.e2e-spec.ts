@@ -12,10 +12,16 @@ import {
     PostAnswerBody,
     PostAnswerRes,
 } from 'src/modules/answers/dto/postAnswer.dto';
+import { ConfigService } from '@nestjs/config';
+import {
+    AnswersSortOptions,
+    GetAnswersRes,
+} from 'src/modules/answers/dto/getAnswers.dto';
 
 describe('Answers module v1 (e2e)', () => {
     let server: NestFastifyApplication;
     let testUtilsService: TestUtilsService;
+    let configService: ConfigService;
 
     beforeAll(async () => {
         server = await loadServer(true);
@@ -23,6 +29,7 @@ describe('Answers module v1 (e2e)', () => {
         await server.getHttpAdapter().getInstance().ready();
 
         testUtilsService = server.get<TestUtilsService>(TestUtilsService);
+        configService = server.get<ConfigService>(ConfigService);
     });
 
     beforeEach(async () => {
@@ -146,6 +153,95 @@ describe('Answers module v1 (e2e)', () => {
 
             expect(body).toHaveValidationErrors(['text']);
             expect(res.statusCode).toEqual(422);
+        });
+    });
+
+    describe('List answers (GET /v1/questions/:questionId/answers)', () => {
+        const method = 'GET';
+        const url = '/v1/questions/:questionId/answers';
+
+        it('Should list answers on the first page', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genAnswers(user, question, pageSize + 1);
+
+            const query = { page: '0', sort: AnswersSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(pageSize);
+        });
+
+        it('Should list answers on the second page', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genAnswers(user, question, pageSize + 1);
+
+            const query = { page: '1', sort: AnswersSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(1);
+        });
+
+        it('Should list answers when sorted by newest', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genAnswers(user, question, pageSize + 1);
+
+            const query = { page: '0', sort: AnswersSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(pageSize);
+            expect(testUtilsService.parseDates(body.answers)).toBeSorted({
+                byKey: 'postedAt',
+                order: 'desc',
+            });
+        });
+
+        it('Should list answers when sorted by oldest', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            await testUtilsService.genAnswers(user, question, pageSize + 1);
+
+            const query = { page: '0', sort: AnswersSortOptions.NEWEST };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(pageSize);
+            expect(testUtilsService.parseDates(body.answers)).toBeSorted({
+                byKey: 'postedAt',
+                order: 'asc',
+            });
         });
     });
 });

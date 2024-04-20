@@ -16,32 +16,6 @@ import {
     QuestionsSortOptions,
 } from 'src/modules/questions/dto/getQuestions.dto';
 import { ConfigService } from '@nestjs/config';
-import { isDateString } from 'class-validator';
-import clone from 'lodash.clone';
-import isObject from 'lodash.isobject';
-
-/**
- * Recursively checks all the strings in the object input and turns them into Date objects if they are date strings (ISO8601).
- * @param input
- * @returns
- */
-const parseDates = (input: any) => {
-    if (Array.isArray(input)) {
-        return input.map((inp) => parseDates(inp));
-    }
-
-    if (isObject(input)) {
-        const copy = clone(input);
-        for (const key in copy) copy[key] = parseDates(copy[key]);
-        return copy;
-    }
-
-    if (typeof input === 'string' && isDateString(input)) {
-        return new Date(input);
-    }
-
-    return input;
-};
 
 describe('Questions module v1 (e2e)', () => {
     let server: NestFastifyApplication;
@@ -219,7 +193,7 @@ describe('Questions module v1 (e2e)', () => {
             expect(body).toMatchSchema(GetQuestionsRes);
             expect(res.statusCode).toEqual(200);
             expect(body.questions).toHaveLength(pageSize);
-            expect(parseDates(body.questions)).toBeSorted({
+            expect(testUtilsService.parseDates(body.questions)).toBeSorted({
                 byKey: 'postedAt',
                 order: 'desc',
             });
@@ -236,7 +210,7 @@ describe('Questions module v1 (e2e)', () => {
             expect(body).toMatchSchema(GetQuestionsRes);
             expect(res.statusCode).toEqual(200);
             expect(body.questions).toHaveLength(pageSize);
-            expect(parseDates(body.questions)).toBeSorted({
+            expect(testUtilsService.parseDates(body.questions)).toBeSorted({
                 byKey: 'postedAt',
                 order: 'asc',
             });
@@ -355,7 +329,7 @@ describe('Questions module v1 (e2e)', () => {
             expect(body).toMatchSchema(GetQuestionsRes);
             expect(res.statusCode).toEqual(200);
             expect(body.questions).toHaveLength(pageSize);
-            expect(parseDates(body.questions)).toBeSorted({
+            expect(testUtilsService.parseDates(body.questions)).toBeSorted({
                 byKey: 'postedAt',
                 order: 'desc',
             });
@@ -380,7 +354,7 @@ describe('Questions module v1 (e2e)', () => {
             expect(body).toMatchSchema(GetQuestionsRes);
             expect(res.statusCode).toEqual(200);
             expect(body.questions).toHaveLength(pageSize);
-            expect(parseDates(body.questions)).toBeSorted({
+            expect(testUtilsService.parseDates(body.questions)).toBeSorted({
                 byKey: 'postedAt',
                 order: 'asc',
             });
