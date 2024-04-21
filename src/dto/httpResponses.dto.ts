@@ -109,3 +109,28 @@ export class TooManyRequestsHttpError {
     @IsString()
     message: string;
 }
+
+export class InternalServerErrorHttpError {
+    /**
+     * The status code of the error
+     */
+    @ApiProperty({ enum: [500] })
+    @IsNumber()
+    @IsIn([500])
+    statusCode: number;
+
+    /**
+     * The error title - what happened?
+     */
+    @ApiProperty({ enum: ['Internal server error'] })
+    @IsString()
+    @IsIn(['Internal server error'])
+    error: string;
+
+    /**
+     * The error description - why did it happen?
+     * @example 'An expected error occurred. Please try again later'
+     */
+    @IsString()
+    message: string;
+}
