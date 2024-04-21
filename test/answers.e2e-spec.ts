@@ -160,7 +160,7 @@ describe('Answers module v1 (e2e)', () => {
         const method = 'GET';
         const url = '/v1/questions/:questionId/answers';
 
-        it.only('Should list answers on the first page', async () => {
+        it('Should list answers on the first page', async () => {
             const user = await testUtilsService.genUser();
             const question = await testUtilsService.genQuestion(user);
             const pageSize = configService.get<number>('PAGE_SIZE');

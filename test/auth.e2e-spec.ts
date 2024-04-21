@@ -175,8 +175,6 @@ describe('Auth module v1 (e2e)', () => {
                 body: invalidUpdatedInfo,
                 headers: authHeaders,
             });
-            console.log(res.body);
-            console.log(res.statusCode);
             const body = res.json();
 
             expect(body).toHaveValidationErrors([
