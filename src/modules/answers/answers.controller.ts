@@ -30,9 +30,11 @@ import {
     UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
 import { GetAnswersQuery, GetAnswersRes } from './dto/getAnswers.dto';
+import { ApiGlobalResponses } from 'src/utils/errors.decorator';
 
 @Controller({ path: 'questions/:questionId/answers', version: '1' })
 @ApiTags('Answers')
+@ApiGlobalResponses()
 export class AnswersController {
     constructor(private readonly answersService: AnswersService) {}
 

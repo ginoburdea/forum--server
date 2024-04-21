@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto';
 import { AppModule } from 'src/app.module';
 import { validationConfig } from 'src/config/validation';
 import { TestUtilsModule } from 'src/modules/test-utils/test-utils.module';
+import { ThrottlerExceptionFilter } from './error.filter';
 
 const fastifyAdapter = new FastifyAdapter({
     genReqId: () => randomUUID(),
@@ -31,6 +32,7 @@ export const loadServer = async (useTestingModule: boolean = false) => {
 
     server.useGlobalPipes(new ValidationPipe(validationConfig));
     server.enableVersioning({ type: VersioningType.URI });
+    server.useGlobalFilters(new ThrottlerExceptionFilter());
 
     const config = server.get(ConfigService);
     if (config.get('NODE_ENV') !== 'production') {

@@ -23,14 +23,19 @@ import {
 } from 'src/dto/httpResponses.dto';
 import { AuthGuard, ReqWithUser } from './auth.guard';
 import { GetProfileRes } from './dto/getProfile.dto';
+import { Throttle } from '@nestjs/throttler';
+import { ApiGlobalResponses } from 'src/utils/errors.decorator';
+import { strictThrottlerConfig } from 'src/config/throttler';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('Authentication and profile information')
+@ApiGlobalResponses()
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Post('google')
     @HttpCode(200)
+    @Throttle(strictThrottlerConfig)
     @ApiOperation({
         summary: 'Authentication via Google',
         description:

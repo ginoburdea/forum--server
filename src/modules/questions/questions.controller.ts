@@ -34,9 +34,11 @@ import {
     UnauthorizedHttpError,
     UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
+import { ApiGlobalResponses } from 'src/utils/errors.decorator';
 
 @Controller({ path: 'questions', version: '1' })
 @ApiTags('Questions')
+@ApiGlobalResponses()
 export class QuestionsController {
     constructor(private readonly questionsService: QuestionsService) {}
 

@@ -84,3 +84,28 @@ export class UnprocessableEntityHttpError extends Validation {
     @IsIn([422])
     statusCode: number;
 }
+
+export class TooManyRequestsHttpError {
+    /**
+     * The status code of the error
+     */
+    @ApiProperty({ enum: [429] })
+    @IsNumber()
+    @IsIn([429])
+    statusCode: number;
+
+    /**
+     * The error title - what happened?
+     */
+    @ApiProperty({ enum: ['Too many requests'] })
+    @IsString()
+    @IsIn(['Too many requests'])
+    error: string;
+
+    /**
+     * The error description - why did it happen?
+     * @example 'Please wait a few minutes and try again'
+     */
+    @IsString()
+    message: string;
+}

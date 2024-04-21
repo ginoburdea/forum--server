@@ -11,6 +11,9 @@ import { bullConfig } from './config/bull';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { mailerConfig } from './config/mailer';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { throttlerConfig } from './config/throttler';
 
 @Module({
     imports: [
@@ -18,12 +21,18 @@ import { mailerConfig } from './config/mailer';
         TypeOrmModule.forRoot({ ...dataSourceOptions, autoLoadEntities: true }),
         BullModule.forRootAsync(bullConfig),
         MailerModule.forRootAsync(mailerConfig),
+        ThrottlerModule.forRootAsync(throttlerConfig),
         AuthModule,
         QuestionsModule,
         AnswersModule,
         NotificationsModule,
     ],
     controllers: [],
-    providers: [],
+    providers: [
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+        },
+    ],
 })
 export class AppModule {}
