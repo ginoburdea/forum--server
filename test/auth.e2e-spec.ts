@@ -156,8 +156,6 @@ describe('Auth module v1 (e2e)', () => {
                 body: updatedInfo,
                 headers: authHeaders,
             });
-            console.log(res.body);
-            console.log(res.statusCode);
 
             expect(res.body).toEqual('');
             expect(res.statusCode).toEqual(204);

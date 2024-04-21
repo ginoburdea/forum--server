@@ -5,15 +5,19 @@ export class UpdateProfileBody {
      * The new full name
      * @example 'John Doe'
      */
-    @IsOptional() @IsString() @IsNotEmpty() name?: string;
+    @IsString() @IsNotEmpty() @IsOptional() name?: string;
 
     /**
      * The updated answers notifications preference
      */
-    @IsOptional() @IsBoolean() answersNotifications?: boolean;
+    @IsBoolean()
+    @IsOptional()
+    answersNotifications?: boolean;
 
     /**
      * The updated replies notifications preference
      */
-    @IsOptional() @IsBoolean() repliesNotifications?: boolean;
+    @IsBoolean()
+    @IsOptional()
+    repliesNotifications?: boolean;
 }

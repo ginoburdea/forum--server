@@ -5,11 +5,7 @@ import {
 } from '@nestjs/common';
 
 export const validationConfig: ValidationPipeOptions = {
-    transform: true,
     whitelist: true,
-    transformOptions: {
-        enableImplicitConversion: true,
-    },
     exceptionFactory: (errors) => {
         return new UnprocessableEntityException({
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
