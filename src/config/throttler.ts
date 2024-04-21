@@ -9,6 +9,7 @@ export const throttlerConfig: ThrottlerAsyncOptions = {
         storage: new ThrottlerStorageRedisService(
             `redis://${configService.get('REDIS_USERNAME')}:${configService.get('REDIS_PASSWORD')}@${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}/0`,
         ),
+        skipIf: () => configService.get('NODE_ENV') !== 'production',
     }),
 };
 

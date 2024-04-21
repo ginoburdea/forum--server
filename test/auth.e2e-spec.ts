@@ -101,7 +101,7 @@ describe('Auth module v1 (e2e)', () => {
         });
     });
 
-    describe('Get profile info about himself (POST /v1/auth/profile)', () => {
+    describe('Get profile info about himself (GET /v1/auth/profile)', () => {
         const method = 'GET';
         const url = '/v1/auth/profile';
 
@@ -125,6 +125,59 @@ describe('Auth module v1 (e2e)', () => {
             const res = await server.inject({
                 method,
                 url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
+        });
+    });
+
+    describe('Update own profile info (PATCH /v1/auth/profile)', () => {
+        const method = 'PATCH';
+        const url = '/v1/auth/profile';
+
+        it('Should update the profile info', async () => {
+            const authHeaders = await testUtilsService.genAuthHeaders();
+            const updatedInfo = {
+                name: faker.helpers.maybe(() => faker.person.fullName()),
+                answersNotifications: faker.helpers.maybe(() =>
+                    faker.helpers.arrayElement([true, false]),
+                ),
+                repliesNotifications: faker.helpers.maybe(() =>
+                    faker.helpers.arrayElement([true, false]),
+                ),
+            };
+
+            const res = await server.inject({
+                method,
+                url,
+                body: updatedInfo,
+                headers: authHeaders,
+            });
+            console.log(res.body);
+            console.log(res.statusCode);
+
+            expect(res.body).toEqual('');
+            expect(res.statusCode).toEqual(204);
+        });
+
+        it('Should return unauthorized error when the user is not logged in', async () => {
+            const authHeaders = { authorization: '' };
+            const updatedInfo = {
+                name: faker.helpers.maybe(() => faker.person.fullName()),
+                answersNotifications: faker.helpers.maybe(() =>
+                    faker.helpers.arrayElement([true, false]),
+                ),
+                repliesNotifications: faker.helpers.maybe(() =>
+                    faker.helpers.arrayElement([true, false]),
+                ),
+            };
+            const res = await server.inject({
+                method,
+                url,
+                body: updatedInfo,
                 headers: authHeaders,
             });
             const body = res.json();

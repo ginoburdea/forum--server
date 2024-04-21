@@ -3,6 +3,7 @@ import {
     Controller,
     Get,
     HttpCode,
+    Patch,
     Post,
     Req,
     UnauthorizedException,
@@ -11,6 +12,7 @@ import {
 import { AuthService } from './auth.service';
 import { GoogleAuthBody, GoogleAuthRes } from './dto/googleAuth.dto';
 import {
+    ApiNoContentResponse,
     ApiOkResponse,
     ApiOperation,
     ApiTags,
@@ -26,6 +28,7 @@ import { GetProfileRes } from './dto/getProfile.dto';
 import { Throttle } from '@nestjs/throttler';
 import { ApiGlobalResponses } from 'src/utils/errors.decorator';
 import { strictThrottlerConfig } from 'src/config/throttler';
+import { UpdateProfileBody } from './dto/updateProfile.dto';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('Authentication and profile information')
@@ -101,5 +104,30 @@ export class AuthController {
             answersNotifications,
             repliesNotifications,
         };
+    }
+
+    @Patch('profile')
+    @HttpCode(204)
+    @UseGuards(AuthGuard)
+    @ApiOperation({
+        summary: 'Update profile info',
+        description: 'Updates the profile information of the logged in user',
+    })
+    @ApiNoContentResponse({
+        description: 'Updated the profile information successfully',
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
+    async updateProfile(
+        @Body() body: UpdateProfileBody,
+        @Req() req: ReqWithUser,
+    ) {
+        await this.authService.updateProfile(req.user.id, body);
     }
 }

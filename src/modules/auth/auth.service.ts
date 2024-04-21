@@ -102,4 +102,8 @@ export class AuthService {
             repliesNotifications: user.repliesNotifications,
         };
     }
+
+    async updateProfile(userId: string, updates: Partial<User>) {
+        await this.userRepo.update({ id: userId }, updates);
+    }
 }
