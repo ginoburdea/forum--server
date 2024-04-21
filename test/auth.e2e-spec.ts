@@ -161,6 +161,32 @@ describe('Auth module v1 (e2e)', () => {
             expect(res.statusCode).toEqual(204);
         });
 
+        it('Should return unprocessable error when some data is invalid', async () => {
+            const authHeaders = await testUtilsService.genAuthHeaders();
+            const invalidUpdatedInfo = {
+                name: faker.number.int(),
+                answersNotifications: faker.number.int(),
+                repliesNotifications: faker.number.int(),
+            };
+
+            const res = await server.inject({
+                method,
+                url,
+                body: invalidUpdatedInfo,
+                headers: authHeaders,
+            });
+            console.log(res.body);
+            console.log(res.statusCode);
+            const body = res.json();
+
+            expect(body).toHaveValidationErrors([
+                'name',
+                'answersNotifications',
+                'repliesNotifications',
+            ]);
+            expect(res.statusCode).toEqual(422);
+        });
+
         it('Should return unauthorized error when the user is not logged in', async () => {
             const authHeaders = { authorization: '' };
             const updatedInfo = {
