@@ -40,7 +40,7 @@ export class InternalSererErrorFilter implements ExceptionFilter {
         return reply.status(500).send({
             statusCode: 500,
             error: 'Internal server error',
-            message: 'An expected error occurred. Please try again later',
+            message: 'An unexpected error occurred. Please try again later',
         } as InternalServerErrorHttpError);
     }
 }

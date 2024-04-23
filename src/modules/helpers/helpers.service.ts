@@ -29,6 +29,7 @@ interface Req {
 export class HelpersService {
     constructor(private readonly dataSource: DataSource) {}
 
+    // eslint-disable-next-line etc/no-commented-out-code
     /**
      * @throws HelperError
      */
@@ -50,6 +51,7 @@ export class HelpersService {
         return { entityId, key: match.groups.key };
     }
 
+    // eslint-disable-next-line etc/no-commented-out-code
     /**
      * @throws HelperError
      */

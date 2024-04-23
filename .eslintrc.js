@@ -5,10 +5,17 @@ module.exports = {
         tsconfigRootDir: __dirname,
         sourceType: 'module',
     },
-    plugins: ['@typescript-eslint/eslint-plugin', 'no-only-tests', 'vitest'],
+    plugins: [
+        '@typescript-eslint/eslint-plugin',
+        'no-only-tests',
+        'vitest',
+        'etc',
+        'unused-imports',
+    ],
     extends: [
         'plugin:@typescript-eslint/recommended',
         'plugin:prettier/recommended',
+        'plugin:etc/recommended',
     ],
     root: true,
     env: {
@@ -24,5 +31,7 @@ module.exports = {
         'no-only-tests/no-only-tests': ['error', { fix: true }],
         'vitest/prefer-lowercase-title': 'off',
         'no-console': 'error',
+        'etc/no-commented-out-code': 'error',
+        'unused-imports/no-unused-imports': 'error',
     },
 }

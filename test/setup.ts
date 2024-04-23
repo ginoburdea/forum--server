@@ -96,15 +96,19 @@ expect.extend({
         }
 
         const receivedCopy = received.map((received) => received[filter.byKey]);
-        const expected = receivedCopy.sort();
+        const expected = [...receivedCopy].sort(
+            filter.order === 'asc' ? (a, b) => a - b : (a, b) => b - a,
+        );
 
         try {
             expect(receivedCopy).toStrictEqual(expected);
         } catch (err) {
             return {
                 message: () =>
-                    `expected array to be sorted ${filter.order} by key ${filter.byKey}`,
+                    `expected array to be sorted "${filter.order}" by key "${filter.byKey}"`,
                 pass: false,
+                actual: receivedCopy,
+                expected,
             };
         }
 

@@ -14,6 +14,7 @@ import {
 } from 'src/modules/answers/dto/postAnswer.dto';
 import { ConfigService } from '@nestjs/config';
 import {
+    AnswersLocation,
     AnswersSortOptions,
     GetAnswersRes,
 } from 'src/modules/answers/dto/getAnswers.dto';
@@ -160,13 +161,128 @@ describe('Answers module v1 (e2e)', () => {
         const method = 'GET';
         const url = '/v1/questions/:questionId/answers';
 
+        it('Should list answers after the answerRef', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            const answers = await testUtilsService.genAnswers(
+                user,
+                question,
+                pageSize + 1,
+            );
+
+            const query = {
+                sort: AnswersSortOptions.OLDEST,
+                answerRef: answers[0].id,
+                answersLocation: AnswersLocation.AFTER,
+            };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(pageSize);
+            expect(body.answers[0].id).toEqual(answers[1].id);
+        });
+
+        it('Should list answers starting with the answerRef', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            const answers = await testUtilsService.genAnswers(
+                user,
+                question,
+                pageSize + 1,
+            );
+
+            const query = {
+                sort: AnswersSortOptions.OLDEST,
+                answerRef: answers[0].id,
+                answersLocation: AnswersLocation.STARTING_AT,
+            };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(pageSize);
+            expect(body.answers[0].id).toEqual(answers[0].id);
+        });
+
+        it('Should list answers before the answerRef', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            const answers = await testUtilsService.genAnswers(
+                user,
+                question,
+                pageSize + 1,
+            );
+
+            const query = {
+                sort: AnswersSortOptions.OLDEST,
+                answerRef: answers.at(-1).id,
+                answersLocation: AnswersLocation.BEFORE,
+            };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(pageSize);
+            expect(body.answers.at(-1).id).toEqual(answers.at(-2).id);
+        });
+
+        it('Should list answers ending with the answerRef', async () => {
+            const user = await testUtilsService.genUser();
+            const question = await testUtilsService.genQuestion(user);
+            const pageSize = configService.get<number>('PAGE_SIZE');
+            const answers = await testUtilsService.genAnswers(
+                user,
+                question,
+                pageSize + 1,
+            );
+
+            const query = {
+                sort: AnswersSortOptions.OLDEST,
+                answerRef: answers.at(-1).id,
+                answersLocation: AnswersLocation.ENDING_AT,
+            };
+            const res = await server.inject({
+                method,
+                url,
+                query,
+            });
+            const body: GetAnswersRes = res.json();
+
+            expect(body).toMatchSchema(GetAnswersRes);
+            expect(res.statusCode).toEqual(200);
+            expect(body.answers).toHaveLength(pageSize);
+            expect(body.answers.at(-1).id).toEqual(answers.at(-1).id);
+        });
+
         it('Should list answers on the first page', async () => {
             const user = await testUtilsService.genUser();
             const question = await testUtilsService.genQuestion(user);
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
-            const query = { page: '0', sort: AnswersSortOptions.NEWEST };
+            const query = {
+                page: '0',
+                sort: AnswersSortOptions.NEWEST,
+            };
             const res = await server.inject({
                 method,
                 url,
@@ -185,7 +301,10 @@ describe('Answers module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
-            const query = { page: '1', sort: AnswersSortOptions.NEWEST };
+            const query = {
+                page: '1',
+                sort: AnswersSortOptions.NEWEST,
+            };
             const res = await server.inject({
                 method,
                 url,
@@ -204,7 +323,10 @@ describe('Answers module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
-            const query = { page: '0', sort: AnswersSortOptions.NEWEST };
+            const query = {
+                page: '0',
+                sort: AnswersSortOptions.NEWEST,
+            };
             const res = await server.inject({
                 method,
                 url,
@@ -227,7 +349,10 @@ describe('Answers module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
-            const query = { page: '0', sort: AnswersSortOptions.NEWEST };
+            const query = {
+                page: '0',
+                sort: AnswersSortOptions.OLDEST,
+            };
             const res = await server.inject({
                 method,
                 url,

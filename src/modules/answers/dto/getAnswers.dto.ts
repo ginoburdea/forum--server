@@ -1,23 +1,62 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
     IsArray,
     IsDateString,
     IsEnum,
+    IsInt,
     IsOptional,
     IsString,
     IsUUID,
     IsUrl,
+    Min,
+    ValidateIf,
     ValidateNested,
 } from 'class-validator';
-import { PaginationQuery } from 'src/dto/pagination.dto';
+import { numberStringToNumber } from 'src/utils/transforms';
 
 export enum AnswersSortOptions {
     NEWEST = 'newest',
     OLDEST = 'oldest',
 }
 
-export class GetAnswersQuery extends PaginationQuery {
+export enum AnswersLocation {
+    AFTER = 'afterRef',
+    STARTING_AT = 'startingAtRef',
+    BEFORE = 'beforeRef',
+    ENDING_AT = 'endingAtRef',
+}
+
+export class GetAnswersQuery {
+    /**
+     * The page number (starts at 0)
+     * @example 7
+     */
+    @Transform(numberStringToNumber)
+    @IsInt({ message: 'page must be an integer' })
+    @Min(0)
+    @IsOptional()
+    page?: number;
+
+    /**
+     * The answer reference
+     */
+    @ApiProperty({ format: 'uuid' })
+    @ValidateIf((opt) => opt.page === undefined || opt.page === null)
+    @IsString()
+    answerRef?: string;
+
+    /**
+     * The location of the listed answers
+     * afterRef = list answers created after the referenced answer
+     * startingAtRef = list answers starting with the referenced answer
+     * beforeRef = list answers created before the referenced answer
+     * endingAtRef = list answers ending with the referenced answer
+     */
+    @ValidateIf((opt) => opt.page === undefined || opt.page === null)
+    @IsEnum(AnswersLocation)
+    answersLocation?: AnswersLocation;
+
     /**
      * The sort option
      */

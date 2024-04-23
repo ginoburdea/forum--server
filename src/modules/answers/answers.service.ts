@@ -1,15 +1,34 @@
-import { Injectable } from '@nestjs/common';
-import { Answer } from './answer.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { AnswersSortOptions, ListedAnswer } from './dto/getAnswers.dto';
-import { ConfigService } from '@nestjs/config';
 import { InjectQueue } from '@nestjs/bull';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bull';
+import { isUUID } from 'class-validator';
+import { DataSource, Repository } from 'typeorm';
 import {
     NewAnswerJobData,
     NewReplyJobData,
 } from '../notifications/notifications.consumer';
+import { Answer } from './answer.entity';
+import {
+    AnswersLocation,
+    AnswersSortOptions,
+    ListedAnswer,
+} from './dto/getAnswers.dto';
+import expand from 'dot-expand';
+
+interface RefBasedFilter {
+    type: 'refBased';
+    refId: string;
+    location: AnswersLocation;
+}
+
+interface PageBasedFilter {
+    type: 'pageBased';
+    page: number;
+}
+
+export type AnswersFilter = RefBasedFilter | PageBasedFilter;
 
 @Injectable()
 export class AnswersService {
@@ -19,6 +38,7 @@ export class AnswersService {
         private readonly config: ConfigService,
         @InjectQueue('notifications')
         private notificationsQueue: Queue,
+        private dataSource: DataSource,
     ) {}
 
     async postAnswer(
@@ -54,7 +74,7 @@ export class AnswersService {
     }
 
     async findAnswer(answerId?: string, relations: string[] = ['user']) {
-        if (!answerId) return null;
+        if (!isUUID(answerId)) return null;
 
         return await this.answersRepo.findOne({
             where: { id: answerId },
@@ -76,49 +96,87 @@ export class AnswersService {
     }
 
     async getAnswers(
-        page: number,
-        sortByField: 'createdAt',
+        filter: AnswersFilter,
         sortAscOrDesc: 'ASC' | 'DESC',
     ): Promise<ListedAnswer[]> {
-        const pageSize = this.config.get<number>('PAGE_SIZE');
-
-        const answerSelectFields = {
-            id: true,
-            createdAt: true,
-            text: true,
-            user: {
-                id: true,
-                name: true,
-                profilePhotoUrl: true,
-            },
+        const comparisonSignDict: Record<AnswersLocation, string> = {
+            [AnswersLocation.AFTER]: '>',
+            [AnswersLocation.STARTING_AT]: '>=',
+            [AnswersLocation.BEFORE]: '<',
+            [AnswersLocation.ENDING_AT]: '<=',
         };
 
-        const answers = await this.answersRepo.find({
-            select: { ...answerSelectFields, replyingTo: answerSelectFields },
-            relations: {
-                user: true,
-                replyingTo: { user: true },
-            },
-            order: {
-                [sortByField]: sortAscOrDesc,
-            },
-            take: pageSize,
-            skip: page * pageSize,
-        });
+        const pageSize = this.config.get<number>('PAGE_SIZE');
 
-        const formatAnswer = (answer: Answer) => ({
-            id: answer.id,
-            text: answer.text,
-            postedAt: answer.createdAt,
+        const sortInSqlQuery =
+            filter.type === 'refBased' &&
+            filter.location !== AnswersLocation.BEFORE &&
+            filter.location !== AnswersLocation.ENDING_AT;
 
-            authorName: answer.user.name,
-            authorPhoto: answer.user.profilePhotoUrl,
+        const query = this.answersRepo
+            .createQueryBuilder('answer')
+            .select('answer.id', 'id')
+            .addSelect('answer.created_at', 'postedAt')
+            .addSelect('answer.text', 'text')
 
-            replyingToAnswer: answer.replyingTo
-                ? formatAnswer(answer.replyingTo)
-                : undefined,
-        });
+            .addSelect('user.name', 'authorName')
+            .addSelect('user.profile_photo_url', 'authorPhoto')
 
-        return answers.map(formatAnswer);
+            .addSelect('replying_to.id', 'replyingToAnswer.id')
+            .addSelect('replying_to.created_at', 'replyingToAnswer.postedAt')
+            .addSelect('replying_to.text', 'replyingToAnswer.text')
+
+            .addSelect('replying_to_user.name', 'replyingToAnswer.authorName')
+            .addSelect(
+                'replying_to_user.profile_photo_url',
+                'replyingToAnswer.authorPhoto',
+            )
+
+            .leftJoin('user', 'user', 'user.id = answer.user_id')
+            .leftJoin(
+                'answer',
+                'replying_to',
+                'answer.id = replying_to.replying_to_id',
+            )
+            .leftJoin(
+                'user',
+                'replying_to_user',
+                'replying_to_user.id = replying_to.user_id',
+            )
+
+            .where(
+                filter.type === 'pageBased'
+                    ? 'TRUE'
+                    : [
+                          'answer.created_at',
+                          comparisonSignDict[filter.location],
+                          '(SELECT created_at FROM answer WHERE id = :refId)',
+                      ].join(' '),
+                { refId: filter.refId },
+            )
+            .offset(filter.type === 'pageBased' ? filter.page * pageSize : 0)
+            .limit(pageSize)
+            .orderBy(
+                'answer.created_at',
+                sortInSqlQuery ? sortAscOrDesc : 'DESC',
+            );
+
+        const results = (await query.getRawMany())
+            .map((res) => expand(res))
+            .map((res) =>
+                res.replyingToAnswer.id
+                    ? res
+                    : { ...res, replyingToAnswer: undefined },
+            );
+
+        if (!sortInSqlQuery) {
+            results.sort(
+                sortAscOrDesc === 'ASC'
+                    ? (a, b) => a.postedAt - b.postedAt
+                    : (a, b) => b.postedAt - a.postedAt,
+            );
+        }
+
+        return results;
     }
 }

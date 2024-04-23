@@ -203,7 +203,7 @@ describe('Questions module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genQuestionsWithAnswers(pageSize);
 
-            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const query = { page: '0', sort: QuestionsSortOptions.OLDEST };
             const res = await server.inject({ method, url, query });
             const body: GetQuestionsRes = res.json();
 
@@ -342,7 +342,7 @@ describe('Questions module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genQuestionsWithAnswers(pageSize, user);
 
-            const query = { page: '0', sort: QuestionsSortOptions.NEWEST };
+            const query = { page: '0', sort: QuestionsSortOptions.OLDEST };
             const res = await server.inject({
                 method,
                 url,

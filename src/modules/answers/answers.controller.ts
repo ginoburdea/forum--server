@@ -9,7 +9,7 @@ import {
     Query,
     Req,
 } from '@nestjs/common';
-import { AnswersService } from './answers.service';
+import { AnswersFilter, AnswersService } from './answers.service';
 import { PostAnswerBody, PostAnswerRes } from './dto/postAnswer.dto';
 import { Has } from '../helpers/has.decorator';
 import { Question } from '../questions/question.entity';
@@ -107,12 +107,41 @@ export class AnswersController {
         type: UnprocessableEntityHttpError,
     })
     async getAnswers(@Query() query: GetAnswersQuery) {
-        const [sortByField, sortAscOrDesc] =
-            this.answersService.convertSortOption(query.sort);
+        let filter: AnswersFilter;
+
+        if (query.page === undefined || query.page === null) {
+            const answer = await this.answersService.findAnswer(
+                query.answerRef,
+            );
+
+            if (!answer) {
+                throw new BadRequestException({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    error: 'Validation error',
+                    message: {
+                        answerRef: 'answer not found',
+                    },
+                });
+            }
+
+            filter = {
+                type: 'refBased',
+                refId: query.answerRef,
+                location: query.answersLocation,
+            };
+        } else {
+            filter = {
+                type: 'pageBased',
+                page: query.page,
+            };
+        }
+
+        const [, sortAscOrDesc] = this.answersService.convertSortOption(
+            query.sort,
+        );
 
         const answers = await this.answersService.getAnswers(
-            query.page,
-            sortByField as 'createdAt',
+            filter,
             sortAscOrDesc,
         );
 
