@@ -115,7 +115,7 @@ export class AnswersController {
     async getAnswers(
         @Query() query: GetAnswersQuery,
         @Param('questionId', IdToEntityPipe, RejectMissingEntityPipe)
-        _question: Question,
+        question: Question,
     ) {
         let filter: AnswersFilter;
 
@@ -153,6 +153,7 @@ export class AnswersController {
         const answers = await this.answersService.getAnswers(
             filter,
             sortAscOrDesc,
+            question.id,
         );
 
         return { answers };

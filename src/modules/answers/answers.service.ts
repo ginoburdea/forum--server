@@ -98,6 +98,7 @@ export class AnswersService {
     async getAnswers(
         filter: AnswersFilter,
         sortAscOrDesc: 'ASC' | 'DESC',
+        questionId: string,
     ): Promise<ListedAnswer[]> {
         const comparisonSignDict: Record<AnswersLocation, string> = {
             [AnswersLocation.AFTER]: '>',
@@ -143,6 +144,11 @@ export class AnswersService {
                 'replying_to_user',
                 'replying_to_user.id = replying_to.user_id',
             )
+            .leftJoin(
+                'question',
+                'question',
+                'question.id = answer.question_id',
+            )
 
             .where(
                 filter.type === 'pageBased'
@@ -156,6 +162,7 @@ export class AnswersService {
                     refId: filter.type === 'pageBased' ? 'TRUE' : filter.refId,
                 },
             )
+            .andWhere('question.id = :questionId', { questionId })
             .offset(filter.type === 'pageBased' ? filter.page * pageSize : 0)
             .limit(pageSize)
             .orderBy(
