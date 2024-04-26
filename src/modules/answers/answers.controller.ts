@@ -5,16 +5,16 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    Param,
     Post,
     Query,
     Req,
+    UseGuards,
 } from '@nestjs/common';
 import { AnswersFilter, AnswersService } from './answers.service';
 import { PostAnswerBody, PostAnswerRes } from './dto/postAnswer.dto';
-import { Has } from '../helpers/has.decorator';
 import { Question } from '../questions/question.entity';
 import { Answer } from './answer.entity';
-import { ReqWithData } from '../helpers/has.guard';
 import {
     ApiBearerAuth,
     ApiOperation,
@@ -31,6 +31,10 @@ import {
 } from 'src/dto/httpResponses.dto';
 import { GetAnswersQuery, GetAnswersRes } from './dto/getAnswers.dto';
 import { ApiGlobalResponses } from 'src/utils/errors.decorator';
+import { AuthGuard } from '../auth/auth.guard';
+import { RejectMissingEntityPipe } from 'src/utils/rejectMissingEntity.pipe';
+import { IdToEntityPipe } from '../helpers/idToEntity.pipe';
+import { FastifyRequest } from 'fastify';
 
 @Controller({ path: 'questions/:questionId/answers', version: '1' })
 @ApiTags('Answers')
@@ -40,10 +44,7 @@ export class AnswersController {
 
     @Post()
     @HttpCode(200)
-    @Has([
-        [Question, 'params.questionId', 'question', false, false],
-        [Answer, 'body.replyingTo', null, false, true],
-    ])
+    @UseGuards(AuthGuard)
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Post an answer',
@@ -66,9 +67,14 @@ export class AnswersController {
         description: 'Some data is invalid',
         type: UnprocessableEntityHttpError,
     })
-    async postAnswer(@Req() req: ReqWithData, @Body() body: PostAnswerBody) {
-        // @ts-expect-error: req.data.question is a generic BaseEntity and doesn't have typings for every property
-        if (req.data.question.closedAt) {
+    async postAnswer(
+        @Req() req: FastifyRequest,
+        @Body() body: PostAnswerBody,
+        @Param('questionId', IdToEntityPipe, RejectMissingEntityPipe)
+        question: Question,
+        @Body('replyingTo', IdToEntityPipe) replyingToAnswer?: Answer,
+    ) {
+        if (question.closedAt) {
             throw new BadRequestException({
                 statusCode: HttpStatus.BAD_REQUEST,
                 error: 'Validation error',
@@ -80,10 +86,10 @@ export class AnswersController {
         }
 
         const { answerId, replyingToId } = await this.answersService.postAnswer(
-            req.user.id,
-            req.data.question.id,
+            req.routeOptions.config.user.id,
+            question.id,
             body.text,
-            body.replyingTo,
+            replyingToAnswer?.id,
         );
         return { answerId, replyingToId };
     }
@@ -106,7 +112,11 @@ export class AnswersController {
         description: 'Some data is invalid',
         type: UnprocessableEntityHttpError,
     })
-    async getAnswers(@Query() query: GetAnswersQuery) {
+    async getAnswers(
+        @Query() query: GetAnswersQuery,
+        @Param('questionId', IdToEntityPipe, RejectMissingEntityPipe)
+        _question: Question,
+    ) {
         let filter: AnswersFilter;
 
         if (query.page === undefined || query.page === null) {

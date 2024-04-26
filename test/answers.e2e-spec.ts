@@ -171,6 +171,7 @@ describe('Answers module v1 (e2e)', () => {
                 pageSize + 1,
             );
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 sort: AnswersSortOptions.OLDEST,
                 answerRef: answers[0].id,
@@ -178,7 +179,7 @@ describe('Answers module v1 (e2e)', () => {
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();
@@ -199,6 +200,7 @@ describe('Answers module v1 (e2e)', () => {
                 pageSize + 1,
             );
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 sort: AnswersSortOptions.OLDEST,
                 answerRef: answers[0].id,
@@ -206,7 +208,7 @@ describe('Answers module v1 (e2e)', () => {
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();
@@ -227,6 +229,7 @@ describe('Answers module v1 (e2e)', () => {
                 pageSize + 1,
             );
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 sort: AnswersSortOptions.OLDEST,
                 answerRef: answers.at(-1).id,
@@ -234,7 +237,7 @@ describe('Answers module v1 (e2e)', () => {
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();
@@ -255,6 +258,7 @@ describe('Answers module v1 (e2e)', () => {
                 pageSize + 1,
             );
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 sort: AnswersSortOptions.OLDEST,
                 answerRef: answers.at(-1).id,
@@ -262,7 +266,7 @@ describe('Answers module v1 (e2e)', () => {
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();
@@ -279,13 +283,14 @@ describe('Answers module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 page: '0',
                 sort: AnswersSortOptions.NEWEST,
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();
@@ -301,13 +306,14 @@ describe('Answers module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 page: '1',
                 sort: AnswersSortOptions.NEWEST,
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();
@@ -323,13 +329,14 @@ describe('Answers module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 page: '0',
                 sort: AnswersSortOptions.NEWEST,
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();
@@ -349,13 +356,14 @@ describe('Answers module v1 (e2e)', () => {
             const pageSize = configService.get<number>('PAGE_SIZE');
             await testUtilsService.genAnswers(user, question, pageSize + 1);
 
+            const _url = url.replace(':questionId', question.id);
             const query = {
                 page: '0',
                 sort: AnswersSortOptions.OLDEST,
             };
             const res = await server.inject({
                 method,
-                url,
+                url: _url,
                 query,
             });
             const body: GetAnswersRes = res.json();

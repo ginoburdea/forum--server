@@ -11,11 +11,10 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
-import { AuthGuard, ReqWithUser } from '../auth/auth.guard';
+import { AuthGuard } from '../auth/auth.guard';
 import { PostQuestionBody, PostQuestionRes } from './dto/postQuestion.dto';
 import { CloseQuestionParams } from './dto/closeQuestion.dto';
 import { Question } from './question.entity';
-import { Has } from '../helpers/has.decorator';
 import { GetQuestionsQuery, GetQuestionsRes } from './dto/getQuestions.dto';
 import {
     ApiBadRequestResponse,
@@ -35,6 +34,10 @@ import {
     UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
 import { ApiGlobalResponses } from 'src/utils/errors.decorator';
+import { IdToEntityPipe } from '../helpers/idToEntity.pipe';
+import { RejectMissingEntityPipe } from 'src/utils/rejectMissingEntity.pipe';
+import { UserOwnsEntityPipe } from '../helpers/userOwnsEntity.pipe';
+import { FastifyRequest } from 'fastify';
 
 @Controller({ path: 'questions', version: '1' })
 @ApiTags('Questions')
@@ -63,11 +66,11 @@ export class QuestionsController {
         type: UnprocessableEntityHttpError,
     })
     async postQuestion(
-        @Req() req: ReqWithUser,
+        @Req() req: FastifyRequest,
         @Body() body: PostQuestionBody,
     ) {
         const { questionId } = await this.questionsService.postQuestion(
-            req.user.id,
+            req.routeOptions.config.user.id,
             body.question,
         );
         return { questionId };
@@ -75,7 +78,8 @@ export class QuestionsController {
 
     @Put(':questionId/close')
     @HttpCode(204)
-    @Has([[Question, 'params.questionId', 'question', true, false]])
+    @UseGuards(AuthGuard)
+    // @Has([[Question, 'params.questionId', 'question', true, false]])
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Close a question',
@@ -103,7 +107,16 @@ export class QuestionsController {
         description: 'Some data is invalid',
         type: UnprocessableEntityHttpError,
     })
-    async closeQuestion(@Param() params: CloseQuestionParams) {
+    async closeQuestion(
+        @Param() params: CloseQuestionParams,
+        @Param(
+            'questionId',
+            IdToEntityPipe,
+            RejectMissingEntityPipe,
+            UserOwnsEntityPipe,
+        )
+        _question: Question,
+    ) {
         await this.questionsService.closeQuestion(params.questionId);
     }
 
@@ -154,7 +167,7 @@ export class QuestionsController {
     })
     async getOwnQuestions(
         @Query() query: GetQuestionsQuery,
-        @Req() req: ReqWithUser,
+        @Req() req: FastifyRequest,
     ) {
         const [sortByField, sortAscOrDesc] =
             this.questionsService.convertSortOption(query.sort);
@@ -163,7 +176,7 @@ export class QuestionsController {
             query.page,
             sortByField,
             sortAscOrDesc,
-            req.user.id,
+            req.routeOptions.config.user.id,
         );
 
         return { questions };

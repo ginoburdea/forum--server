@@ -33,5 +33,13 @@ module.exports = {
         'no-console': 'error',
         'etc/no-commented-out-code': 'error',
         'unused-imports/no-unused-imports': 'error',
+        '@typescript-eslint/no-unused-vars': [
+            'error',
+            {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_',
+            },
+        ],
     },
 }

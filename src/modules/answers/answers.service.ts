@@ -146,13 +146,15 @@ export class AnswersService {
 
             .where(
                 filter.type === 'pageBased'
-                    ? 'TRUE'
+                    ? ':refId'
                     : [
                           'answer.created_at',
                           comparisonSignDict[filter.location],
                           '(SELECT created_at FROM answer WHERE id = :refId)',
                       ].join(' '),
-                { refId: filter.refId },
+                {
+                    refId: filter.type === 'pageBased' ? 'TRUE' : filter.refId,
+                },
             )
             .offset(filter.type === 'pageBased' ? filter.page * pageSize : 0)
             .limit(pageSize)

@@ -23,12 +23,13 @@ import {
     UnauthorizedHttpError,
     UnprocessableEntityHttpError,
 } from 'src/dto/httpResponses.dto';
-import { AuthGuard, ReqWithUser } from './auth.guard';
+import { AuthGuard } from './auth.guard';
 import { GetProfileRes } from './dto/getProfile.dto';
 import { Throttle } from '@nestjs/throttler';
 import { ApiGlobalResponses } from 'src/utils/errors.decorator';
 import { strictThrottlerConfig } from 'src/config/throttler';
 import { UpdateProfileBody } from './dto/updateProfile.dto';
+import { FastifyRequest } from 'fastify';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('Authentication and profile information')
@@ -88,14 +89,14 @@ export class AuthController {
         description: 'The user is not logged in',
         type: UnauthorizedHttpError,
     })
-    async getProfile(@Req() req: ReqWithUser) {
+    async getProfile(@Req() req: FastifyRequest) {
         const {
             name,
             email,
             photo,
             answersNotifications,
             repliesNotifications,
-        } = await this.authService.getProfile(req.user.id);
+        } = await this.authService.getProfile(req.routeOptions.config.user.id);
 
         return {
             name,
@@ -126,8 +127,11 @@ export class AuthController {
     })
     async updateProfile(
         @Body() body: UpdateProfileBody,
-        @Req() req: ReqWithUser,
+        @Req() req: FastifyRequest,
     ) {
-        await this.authService.updateProfile(req.user.id, body);
+        await this.authService.updateProfile(
+            req.routeOptions.config.user.id,
+            body,
+        );
     }
 }

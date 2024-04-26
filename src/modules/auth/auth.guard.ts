@@ -10,11 +10,6 @@ import { validate } from 'class-validator';
 import { AuthGuardHeaders } from './dto/guard.dto';
 import { FastifyRequest } from 'fastify';
 import { validationConfig } from 'src/config/validation';
-import { User } from './user.entity';
-
-export interface ReqWithUser extends FastifyRequest {
-    user: User;
-}
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -23,7 +18,7 @@ export class AuthGuard implements CanActivate {
     constructor(private readonly authService: AuthService) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        const req = context.switchToHttp().getRequest<ReqWithUser>();
+        const req = context.switchToHttp().getRequest<FastifyRequest>();
         const headers = { ...req.headers };
 
         const classObj = plainToInstance(AuthGuardHeaders, headers);
@@ -38,7 +33,7 @@ export class AuthGuard implements CanActivate {
             throw new UnauthorizedException(this.errorMessage);
         }
 
-        req.user = user;
+        req.routeOptions.config.user = user;
         return true;
     }
 }
