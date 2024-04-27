@@ -3,6 +3,7 @@ import {
     Controller,
     Get,
     HttpCode,
+    Logger,
     Patch,
     Post,
     Req,
@@ -35,6 +36,8 @@ import { FastifyRequest } from 'fastify';
 @ApiTags('Authentication and profile information')
 @ApiGlobalResponses()
 export class AuthController {
+    private readonly logger = new Logger(AuthController.name);
+
     constructor(private readonly authService: AuthService) {}
 
     @Post('google')
@@ -68,10 +71,11 @@ export class AuthController {
         const user =
             (await this.authService.getUserByEmail(userData.email)) ||
             (await this.authService.createUser(userData));
-
         const { token, expiresAt } = await this.authService.genAuthInfo(
             user.id,
         );
+
+        this.logger.debug({ userId: user.id });
         return { token, expiresAt };
     }
 

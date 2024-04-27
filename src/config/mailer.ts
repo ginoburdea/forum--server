@@ -2,10 +2,14 @@ import { MailerAsyncOptions } from '@nestjs-modules/mailer/dist/interfaces/maile
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { resolve } from 'path';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 export const mailerConfig: MailerAsyncOptions = {
-    inject: [ConfigService],
-    useFactory: async (configService: ConfigService) => {
+    inject: [ConfigService, PinoLogger],
+    useFactory: async (configService: ConfigService, logger: PinoLogger) => {
+        logger.setContext(MailerModule.name);
+
         return {
             transport: {
                 host: configService.get('SMTP_HOST'),
@@ -15,6 +19,7 @@ export const mailerConfig: MailerAsyncOptions = {
                     user: configService.get('SMTP_USERNAME'),
                     pass: configService.get('SMTP_PASSWORD'),
                 },
+                logger: logger as any,
             },
             defaults: {
                 from: {

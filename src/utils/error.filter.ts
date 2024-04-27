@@ -3,6 +3,7 @@ import {
     Catch,
     ArgumentsHost,
     HttpException,
+    Logger,
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { FastifyReply } from 'fastify';
@@ -26,7 +27,9 @@ export class ThrottlerExceptionFilter implements ExceptionFilter {
 }
 
 @Catch()
-export class InternalSererErrorFilter implements ExceptionFilter {
+export class InternalServerErrorFilter implements ExceptionFilter {
+    private readonly logger = new Logger(InternalServerErrorFilter.name);
+
     catch(exception: Error, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const reply = ctx.getResponse<FastifyReply>();
@@ -37,6 +40,7 @@ export class InternalSererErrorFilter implements ExceptionFilter {
                 .send(exception.getResponse());
         }
 
+        this.logger.error(exception);
         return reply.status(500).send({
             statusCode: 500,
             error: 'Internal server error',

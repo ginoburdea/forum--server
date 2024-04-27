@@ -14,6 +14,8 @@ import { mailerConfig } from './config/mailer';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { throttlerConfig } from './config/throttler';
+import { LoggerModule } from 'nestjs-pino';
+import { loggerConfig } from './config/logger';
 
 @Module({
     imports: [
@@ -22,6 +24,7 @@ import { throttlerConfig } from './config/throttler';
         BullModule.forRootAsync(bullConfig),
         MailerModule.forRootAsync(mailerConfig),
         ThrottlerModule.forRootAsync(throttlerConfig),
+        LoggerModule.forRootAsync(loggerConfig),
         AuthModule,
         QuestionsModule,
         AnswersModule,

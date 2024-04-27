@@ -79,7 +79,6 @@ export class QuestionsController {
     @Put(':questionId/close')
     @HttpCode(204)
     @UseGuards(AuthGuard)
-    // @Has([[Question, 'params.questionId', 'question', true, false]])
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Close a question',
