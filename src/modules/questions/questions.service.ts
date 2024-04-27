@@ -4,6 +4,7 @@ import { Question } from './question.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ListedQuestion, QuestionsSortOptions } from './dto/getQuestions.dto';
 import { ConfigService } from '@nestjs/config';
+import { GetQuestionRes } from './dto/getQuestion.dto';
 
 @Injectable()
 export class QuestionsService {
@@ -55,19 +56,19 @@ export class QuestionsService {
         page: number,
         sortByField: string,
         sortAscOrDesc: 'ASC' | 'DESC',
+        pageSize: number,
+        previewLength?: number,
         userId?: string,
-    ): Promise<ListedQuestion[]> {
-        const pageSize = this.config.get<number>('PAGE_SIZE');
-        const previewLength = this.config.get<number>(
-            'QUESTION_PREVIEW_LENGTH',
-        );
-
+        questionId?: string,
+    ): Promise<(ListedQuestion | GetQuestionRes)[]> {
         return await this.questionsRepo
             .createQueryBuilder('question')
             .select('question.id', 'id')
             .addSelect(
-                `case when length(question.text) <= ${previewLength} then question.text else left(question.text, ${previewLength}) || '...' end`,
-                'preview',
+                previewLength
+                    ? `case when length(question.text) <= ${previewLength} then question.text else left(question.text, ${previewLength}) || '...' end`
+                    : 'text',
+                previewLength ? 'preview' : 'text',
             )
             .addSelect('question.created_at', 'postedAt')
             .addSelect('question.closed_at is not null', 'closed')
@@ -84,6 +85,9 @@ export class QuestionsService {
             .leftJoin('user', 'user', 'question.user_id = user.id')
             .where(userId ? 'question.user_id = :userId' : 'TRUE', {
                 userId,
+            })
+            .andWhere(questionId ? 'question.id = :questionId' : 'TRUE', {
+                questionId,
             })
             .orderBy(sortByField, sortAscOrDesc)
             .limit(pageSize)

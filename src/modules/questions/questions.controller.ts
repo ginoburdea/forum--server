@@ -38,12 +38,17 @@ import { IdToEntityPipe } from '../helpers/idToEntity.pipe';
 import { RejectMissingEntityPipe } from 'src/utils/rejectMissingEntity.pipe';
 import { UserOwnsEntityPipe } from '../helpers/userOwnsEntity.pipe';
 import { FastifyRequest } from 'fastify';
+import { GetQuestionParams, GetQuestionRes } from './dto/getQuestion.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Controller({ path: 'questions', version: '1' })
 @ApiTags('Questions')
 @ApiGlobalResponses()
 export class QuestionsController {
-    constructor(private readonly questionsService: QuestionsService) {}
+    constructor(
+        private readonly questionsService: QuestionsService,
+        private readonly config: ConfigService,
+    ) {}
 
     @Post()
     @HttpCode(200)
@@ -136,13 +141,63 @@ export class QuestionsController {
         const [sortByField, sortAscOrDesc] =
             this.questionsService.convertSortOption(query.sort);
 
+        const previewLength = this.config.get<number>(
+            'QUESTION_PREVIEW_LENGTH',
+        );
+        const pageSize = this.config.get<number>('PAGE_SIZE');
         const questions = await this.questionsService.getQuestions(
             query.page,
             sortByField,
             sortAscOrDesc,
+            pageSize,
+            previewLength,
         );
 
         return { questions };
+    }
+
+    @Get(':questionId')
+    @UseGuards(AuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'List question by id',
+        description: 'Listing the question with the provided id',
+    })
+    @ApiOkResponse({
+        description: 'Listed questions successfully',
+        type: GetQuestionRes,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
+    @ApiUnprocessableEntityResponse({
+        description: 'Some data is invalid',
+        type: UnprocessableEntityHttpError,
+    })
+    @ApiBadRequestResponse({
+        description:
+            'The question id is invalid or the question does not exist',
+        type: BadRequestHttpError,
+    })
+    async getQuestion(
+        @Param() params: GetQuestionParams,
+        @Param('questionId', IdToEntityPipe, RejectMissingEntityPipe)
+        _question: Question,
+    ) {
+        const [
+            { id, text, postedAt, closed, answers, authorName, authorPhoto },
+        ] = (await this.questionsService.getQuestions(
+            0,
+            'question.created_at',
+            'DESC',
+            1,
+            undefined,
+            undefined,
+            params.questionId,
+        )) as GetQuestionRes[];
+
+        return { id, text, postedAt, closed, answers, authorName, authorPhoto };
     }
 
     @Get('own')
@@ -171,10 +226,16 @@ export class QuestionsController {
         const [sortByField, sortAscOrDesc] =
             this.questionsService.convertSortOption(query.sort);
 
+        const previewLength = this.config.get<number>(
+            'QUESTION_PREVIEW_LENGTH',
+        );
+        const pageSize = this.config.get<number>('PAGE_SIZE');
         const questions = await this.questionsService.getQuestions(
             query.page,
             sortByField,
             sortAscOrDesc,
+            pageSize,
+            previewLength,
             req.routeOptions.config.user.id,
         );
 

@@ -16,6 +16,7 @@ import {
     QuestionsSortOptions,
 } from 'src/modules/questions/dto/getQuestions.dto';
 import { ConfigService } from '@nestjs/config';
+import { GetQuestionRes } from 'src/modules/questions/dto/getQuestion.dto';
 
 describe('Questions module v1 (e2e)', () => {
     let server: NestFastifyApplication;
@@ -254,6 +255,77 @@ describe('Questions module v1 (e2e)', () => {
                 byKey: 'answers',
                 order: 'asc',
             });
+        });
+    });
+
+    describe('List question by id (GET /v1/questions/:questionId)', () => {
+        const method = 'GET';
+        const url = '/v1/questions/:questionId';
+
+        it('Should list a question by its id', async () => {
+            const authHeaders = await testUtilsService.genAuthHeaders();
+            const [question] =
+                await testUtilsService.genQuestionsWithAnswers(1);
+
+            const _url = url.replaceAll(':questionId', question.id);
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+            const body: GetQuestionRes = res.json();
+
+            expect(body).toMatchSchema(GetQuestionRes);
+            expect(res.statusCode).toEqual(200);
+        });
+
+        it('Should return unauthorized error when the user is not logged in', async () => {
+            const authHeaders = { authorization: '' };
+            const [question] =
+                await testUtilsService.genQuestionsWithAnswers(1);
+
+            const _url = url.replace(':questionId', question.id);
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
+        });
+
+        it('Should return unprocessable error when the question id is invalid', async () => {
+            const authHeaders = { authorization: '' };
+            const invalidQuestionId = faker.string.nanoid(16);
+
+            const _url = url.replace(':questionId', invalidQuestionId);
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
+        });
+
+        it('Should return bad request error when the question does not exist', async () => {
+            const authHeaders = await testUtilsService.genAuthHeaders();
+            const notExistentQuestionId = faker.string.uuid();
+
+            const _url = url.replace(':questionId', notExistentQuestionId);
+            const res = await server.inject({
+                method,
+                url: _url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toHaveValidationErrors(['questionId']);
+            expect(res.statusCode).toEqual(400);
         });
     });
 

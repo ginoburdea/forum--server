@@ -13,6 +13,7 @@ import {
 import { AuthService } from './auth.service';
 import { GoogleAuthBody, GoogleAuthRes } from './dto/googleAuth.dto';
 import {
+    ApiBearerAuth,
     ApiNoContentResponse,
     ApiOkResponse,
     ApiOperation,
@@ -81,6 +82,7 @@ export class AuthController {
 
     @Get('profile')
     @UseGuards(AuthGuard)
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Get profile info',
         description: 'Gets the profile information of the logged in user',
@@ -114,6 +116,7 @@ export class AuthController {
     @Patch('profile')
     @HttpCode(204)
     @UseGuards(AuthGuard)
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Update profile info',
         description: 'Updates the profile information of the logged in user',
