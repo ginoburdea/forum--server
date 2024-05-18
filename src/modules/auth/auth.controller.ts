@@ -6,12 +6,18 @@ import {
     Logger,
     Patch,
     Post,
+    Query,
     Req,
     UnauthorizedException,
     UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { GoogleAuthBody, GoogleAuthRes } from './dto/googleAuth.dto';
+import {
+    GoogleAuthBody,
+    GoogleAuthQuery,
+    GoogleAuthRes,
+} from './dto/googleAuth.dto';
 import {
     ApiBearerAuth,
     ApiNoContentResponse,
@@ -32,6 +38,8 @@ import { ApiGlobalResponses } from 'src/utils/errors.decorator';
 import { strictThrottlerConfig } from 'src/config/throttler';
 import { UpdateProfileBody } from './dto/updateProfile.dto';
 import { FastifyRequest } from 'fastify';
+import { OAuthResponseFormatterInterceptor } from 'src/utils/oAuthResponseFormatter.interceptor';
+import { OAuthResponseApiDocs } from 'src/utils/oAuthResponseApiDocs';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('Authentication and profile information')
@@ -44,6 +52,8 @@ export class AuthController {
     @Post('google')
     @HttpCode(200)
     @Throttle(strictThrottlerConfig)
+    @UseInterceptors(OAuthResponseFormatterInterceptor)
+    @OAuthResponseApiDocs()
     @ApiOperation({
         summary: 'Authentication via Google',
         description:
@@ -61,8 +71,13 @@ export class AuthController {
         description: 'Some data is invalid',
         type: UnprocessableEntityHttpError,
     })
-    async loginWithGoogle(@Body() body: GoogleAuthBody) {
-        const userData = await this.authService.idTokenToUserData(body.idToken);
+    async loginWithGoogle(
+        @Body() body: GoogleAuthBody,
+        @Query() _query: GoogleAuthQuery,
+    ) {
+        const userData = await this.authService.idTokenToUserData(
+            body.idToken || body.credential,
+        );
         if (!userData) {
             throw new UnauthorizedException(
                 'Authentication failed. Log in with Google again to retry',

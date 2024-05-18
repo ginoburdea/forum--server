@@ -9,6 +9,8 @@ import { Answer } from '../answers/answer.entity';
 import { isDateString } from 'class-validator';
 import clone from 'lodash.clone';
 import isObject from 'lodash.isobject';
+import { URL } from 'url';
+import { OutgoingHttpHeaders } from 'http';
 
 @Injectable()
 export class TestUtilsService {
@@ -142,4 +144,19 @@ export class TestUtilsService {
             method: 'DELETE',
         });
     }
+
+    headersToOAuthRes = (headers: OutgoingHttpHeaders) => {
+        if (!headers.location) return;
+
+        const url = new URL(headers.location);
+        const rawAuthRes = url.searchParams.get('oAuthRes');
+        if (!rawAuthRes) return;
+
+        try {
+            const authRes = JSON.parse(rawAuthRes);
+            return authRes;
+        } catch (err) {
+            return;
+        }
+    };
 }

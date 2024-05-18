@@ -96,8 +96,73 @@ describe('Auth module v1 (e2e)', () => {
             const res = await server.inject({ method, url, body: inputBody });
             const body = res.json();
 
-            expect(body).toHaveValidationErrors(['idToken']);
+            expect(body).toHaveValidationErrors(['credential']);
             expect(res.statusCode).toEqual(422);
+        });
+    });
+
+    describe('Authenticate with Google using redirects (POST /v1/auth/google?resType=redirect)', () => {
+        const method = 'POST';
+        const url = '/v1/auth/google?resType=redirect';
+
+        it('Should register a user when the Google credential is valid', async () => {
+            mockGoogleAuth();
+            const inputBody: GoogleAuthBody = {
+                credential: faker.string.nanoid(16),
+            };
+            const res = await server.inject({
+                method,
+                url,
+                body: inputBody,
+            });
+            const data = testUtilsService.headersToOAuthRes(res.headers);
+
+            expect(data).toMatchSchema(GoogleAuthRes);
+            expect(data.statusCode).toEqual(200);
+            expect(res.statusCode).toEqual(302);
+        });
+
+        it('Should log in a user when the Google id token is valid', async () => {
+            mockGoogleAuth();
+            const inputBody: GoogleAuthBody = {
+                credential: faker.string.nanoid(16),
+            };
+            await server.inject({ method, url, body: inputBody });
+
+            const res = await server.inject({
+                method,
+                url,
+                body: inputBody,
+            });
+            const data = testUtilsService.headersToOAuthRes(res.headers);
+
+            expect(data).toMatchSchema(GoogleAuthRes);
+            expect(data.statusCode).toEqual(200);
+            expect(res.statusCode).toEqual(302);
+        });
+
+        it('Should return a unauthorized error when the Google id token is invalid', async () => {
+            const inputBody: GoogleAuthBody = {
+                credential: faker.string.nanoid(16),
+            };
+
+            const res = await server.inject({ method, url, body: inputBody });
+            const data = testUtilsService.headersToOAuthRes(res.headers);
+
+            expect(data).toMatchSchema(UnauthorizedHttpError);
+            expect(data.statusCode).toEqual(401);
+            expect(res.statusCode).toEqual(302);
+        });
+
+        it('Should return a validation error when the body data is invalid', async () => {
+            const inputBody = {};
+
+            const res = await server.inject({ method, url, body: inputBody });
+            const data = testUtilsService.headersToOAuthRes(res.headers);
+
+            expect(data).toHaveValidationErrors(['credential']);
+            expect(data.statusCode).toEqual(422);
+            expect(res.statusCode).toEqual(302);
         });
     });
 
