@@ -60,6 +60,8 @@ export const loadServer = async (useTestingModule: boolean = false) => {
     server.useGlobalInterceptors(new LogUserIdInterceptor());
 
     const config = server.get(ConfigService);
+    server.enableCors({ origin: config.get('CORS_ORIGIN') });
+
     if (config.get('NODE_ENV') !== 'production') {
         const swaggerConfig = new DocumentBuilder()
             .setTitle('Forum API')

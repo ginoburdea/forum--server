@@ -8,6 +8,7 @@ export const configConfig: ConfigModuleOptions = {
         NODE_ENV: Joi.string()
             .valid('development', 'production', 'test')
             .default('development'),
+        CORS_ORIGIN: Joi.string().uri().required(),
         FRONTEND_OAUTH_RESPONSE_URL: Joi.string().uri().required(),
         APP_PORT: Joi.number().port().required(),
         APP_HOST: Joi.string().valid('localhost', '0.0.0.0').required(),
