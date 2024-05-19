@@ -9,7 +9,7 @@ import {
     NestFastifyApplication,
     FastifyAdapter,
 } from '@nestjs/platform-fastify';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { AppModule } from 'src/app.module';
@@ -25,6 +25,20 @@ import { LogUserIdInterceptor } from './logUserId.interceptor';
 const fastifyAdapter = new FastifyAdapter({
     genReqId: () => randomUUID(),
 });
+
+const excludeUnwantedParams = (doc: OpenAPIObject) => {
+    for (const path in doc.paths) {
+        for (const method in doc.paths[path]) {
+            for (const location of ['parameters']) {
+                for (const item of doc.paths[path][method][location]) {
+                    if (!item.description) {
+                        delete doc.paths[path][method][location];
+                    }
+                }
+            }
+        }
+    }
+};
 
 export const loadServer = async (useTestingModule: boolean = false) => {
     let server: NestFastifyApplication;
@@ -77,6 +91,7 @@ export const loadServer = async (useTestingModule: boolean = false) => {
             server,
             swaggerConfig,
         );
+        excludeUnwantedParams(swaggerDocument);
 
         SwaggerModule.setup('docs', server, swaggerDocument);
     }
