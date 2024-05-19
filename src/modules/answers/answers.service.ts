@@ -99,7 +99,7 @@ export class AnswersService {
         filter: AnswersFilter,
         sortAscOrDesc: 'ASC' | 'DESC',
         questionId: string,
-    ): Promise<ListedAnswer[]> {
+    ): Promise<{ answers: ListedAnswer[]; nextPage: boolean }> {
         const comparisonSignDict: Record<AnswersLocation, string> = {
             [AnswersLocation.AFTER]: '>',
             [AnswersLocation.STARTING_AT]: '>=',
@@ -164,13 +164,15 @@ export class AnswersService {
             )
             .andWhere('question.id = :questionId', { questionId })
             .offset(filter.type === 'pageBased' ? filter.page * pageSize : 0)
-            .limit(pageSize)
+            .limit(pageSize + 1)
             .orderBy(
                 'answer.created_at',
                 sortInSqlQuery ? sortAscOrDesc : 'DESC',
             );
+        const rawAnswers = await query.getRawMany();
 
-        const results = (await query.getRawMany())
+        const answers = rawAnswers
+            .slice(0, pageSize)
             .map((res) => expand(res))
             .map((res) =>
                 res.replyingToAnswer.id
@@ -179,13 +181,16 @@ export class AnswersService {
             );
 
         if (!sortInSqlQuery) {
-            results.sort(
+            answers.sort(
                 sortAscOrDesc === 'ASC'
                     ? (a, b) => a.postedAt - b.postedAt
                     : (a, b) => b.postedAt - a.postedAt,
             );
         }
 
-        return results;
+        return {
+            answers: answers.slice(0, pageSize),
+            nextPage: rawAnswers.length > pageSize,
+        };
     }
 }

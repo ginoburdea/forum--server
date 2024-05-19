@@ -150,12 +150,12 @@ export class AnswersController {
             query.sort,
         );
 
-        const answers = await this.answersService.getAnswers(
+        const { answers, nextPage } = await this.answersService.getAnswers(
             filter,
             sortAscOrDesc,
             question.id,
         );
 
-        return { answers };
+        return { answers, nextPage };
     }
 }

@@ -145,15 +145,16 @@ export class QuestionsController {
             'QUESTION_PREVIEW_LENGTH',
         );
         const pageSize = this.config.get<number>('PAGE_SIZE');
-        const questions = await this.questionsService.getQuestions(
-            query.page,
-            sortByField,
-            sortAscOrDesc,
-            pageSize,
-            previewLength,
-        );
+        const { questions, nextPage } =
+            await this.questionsService.getQuestions(
+                query.page,
+                sortByField,
+                sortAscOrDesc,
+                pageSize,
+                previewLength,
+            );
 
-        return { questions };
+        return { questions, nextPage };
     }
 
     @Get(':questionId')
@@ -185,9 +186,7 @@ export class QuestionsController {
         @Param('questionId', IdToEntityPipe, RejectMissingEntityPipe)
         _question: Question,
     ) {
-        const [
-            { id, text, postedAt, closed, answers, authorName, authorPhoto },
-        ] = (await this.questionsService.getQuestions(
+        const { questions } = await this.questionsService.getQuestions(
             0,
             'question.created_at',
             'DESC',
@@ -195,7 +194,9 @@ export class QuestionsController {
             undefined,
             undefined,
             params.questionId,
-        )) as GetQuestionRes[];
+        );
+        const { id, text, postedAt, closed, answers, authorName, authorPhoto } =
+            questions[0] as GetQuestionRes;
 
         return { id, text, postedAt, closed, answers, authorName, authorPhoto };
     }
@@ -230,15 +231,16 @@ export class QuestionsController {
             'QUESTION_PREVIEW_LENGTH',
         );
         const pageSize = this.config.get<number>('PAGE_SIZE');
-        const questions = await this.questionsService.getQuestions(
-            query.page,
-            sortByField,
-            sortAscOrDesc,
-            pageSize,
-            previewLength,
-            req.routeOptions.config.user.id,
-        );
+        const { questions, nextPage } =
+            await this.questionsService.getQuestions(
+                query.page,
+                sortByField,
+                sortAscOrDesc,
+                pageSize,
+                previewLength,
+                req.routeOptions.config.user.id,
+            );
 
-        return { questions };
+        return { questions, nextPage };
     }
 }

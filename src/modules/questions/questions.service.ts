@@ -60,8 +60,11 @@ export class QuestionsService {
         previewLength?: number,
         userId?: string,
         questionId?: string,
-    ): Promise<(ListedQuestion | GetQuestionRes)[]> {
-        return await this.questionsRepo
+    ): Promise<{
+        questions: (ListedQuestion | GetQuestionRes)[];
+        nextPage: boolean;
+    }> {
+        const questions = await this.questionsRepo
             .createQueryBuilder('question')
             .select('question.id', 'id')
             .addSelect(
@@ -90,8 +93,13 @@ export class QuestionsService {
                 questionId,
             })
             .orderBy(sortByField, sortAscOrDesc)
-            .limit(pageSize)
+            .limit(pageSize + 1)
             .offset(page * pageSize)
             .getRawMany();
+
+        return {
+            questions: questions.slice(0, pageSize),
+            nextPage: questions.length > pageSize,
+        };
     }
 }

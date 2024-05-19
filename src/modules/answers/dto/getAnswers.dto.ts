@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
     IsArray,
+    IsBoolean,
     IsDateString,
     IsEnum,
     IsInt,
@@ -114,4 +115,9 @@ export class GetAnswersRes {
     @ValidateNested({ each: true })
     @Type(() => ListedAnswer)
     answers: ListedAnswer[];
+
+    /**
+     * Whether there are more answers on the next page
+     */
+    @IsBoolean() nextPage: boolean;
 }

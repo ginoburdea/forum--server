@@ -83,4 +83,9 @@ export class GetQuestionsRes {
     @ValidateNested({ each: true })
     @Type(() => ListedQuestion)
     questions: ListedQuestion[];
+
+    /**
+     * Whether there are more questions on the next page
+     */
+    @IsBoolean() nextPage: boolean;
 }
