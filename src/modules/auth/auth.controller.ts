@@ -2,6 +2,7 @@ import {
     Body,
     Controller,
     Get,
+    Header,
     HttpCode,
     Logger,
     Patch,
@@ -93,6 +94,30 @@ export class AuthController {
 
         this.logger.debug({ userId: user.id });
         return { token, expiresAt };
+    }
+
+    @Post('logout')
+    @UseGuards(AuthGuard)
+    @ApiBearerAuth()
+    @HttpCode(204)
+    @Throttle(strictThrottlerConfig)
+    @UseInterceptors(OAuthResponseFormatterInterceptor)
+    @OAuthResponseApiDocs()
+    @ApiOperation({
+        summary: 'Logout',
+        description: 'Logs out the current user and invalidates the token',
+    })
+    @ApiOkResponse({
+        description: 'Successful log out',
+        type: GoogleAuthRes,
+    })
+    @ApiUnauthorizedResponse({
+        description: 'The user is not logged in',
+        type: UnauthorizedHttpError,
+    })
+    async logout(@Req() req: FastifyRequest) {
+        const token = req.headers.authorization.replace('Bearer ', '');
+        await this.authService.invalidateToken(token);
     }
 
     @Get('profile')

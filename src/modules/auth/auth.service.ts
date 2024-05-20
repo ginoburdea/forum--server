@@ -106,4 +106,8 @@ export class AuthService {
     async updateProfile(userId: string, updates: Partial<User>) {
         await this.userRepo.update({ id: userId }, updates);
     }
+
+    async invalidateToken(token: string) {
+        await this.sessionRepo.delete({ token });
+    }
 }

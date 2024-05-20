@@ -166,6 +166,38 @@ describe('Auth module v1 (e2e)', () => {
         });
     });
 
+    describe('Log out (POST /v1/auth/logout)', () => {
+        const method = 'POST';
+        const url = '/v1/auth/logout';
+
+        it('Should log out the current user', async () => {
+            const authHeaders = await testUtilsService.genAuthHeaders();
+
+            const res = await server.inject({
+                method,
+                url,
+                headers: authHeaders,
+            });
+
+            expect(res.body).toEqual('');
+            expect(res.statusCode).toEqual(204);
+        });
+
+        it('Should return unauthorized error when the user is not logged in', async () => {
+            const authHeaders = { authorization: '' };
+
+            const res = await server.inject({
+                method,
+                url,
+                headers: authHeaders,
+            });
+            const body = res.json();
+
+            expect(body).toMatchSchema(UnauthorizedHttpError);
+            expect(res.statusCode).toEqual(401);
+        });
+    });
+
     describe('Get profile info about himself (GET /v1/auth/profile)', () => {
         const method = 'GET';
         const url = '/v1/auth/profile';
