@@ -137,7 +137,7 @@ export class AnswersService {
             .leftJoin(
                 'answer',
                 'replying_to',
-                'answer.id = replying_to.replying_to_id',
+                'answer.replying_to_id = replying_to.id',
             )
             .leftJoin(
                 'user',
